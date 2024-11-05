@@ -1,0 +1,100 @@
+version: '3'
+services:
+  web:
+    build: movies
+    container_name: movies_web
+    restart: always
+    volumes:
+      - static_volume:/opt/app/static
+      - media_volume:/opt/app/media
+    env_file:
+      - ./.env
+    depends_on:
+      db:
+        condition: service_healthy
+
+  etl:
+    build: etl
+    container_name: movies_etl
+    env_file:
+      - ./.env
+    depends_on:
+      db:
+        condition: service_healthy
+      es:
+        condition: service_healthy
+
+  nginx:
+    image: nginx:latest
+    container_name: movies_nginx
+    restart: always
+    volumes:
+      - ./configs/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./configs/nginx/sites:/etc/nginx/conf.d:ro
+      - static_volume:/opt/app/static
+      - media_volume:/opt/app/media
+    depends_on:
+      - web
+    ports:
+      - "80:80"
+
+  db:
+    image: postgres:16
+    container_name: movies_db
+    restart: always
+    volumes:
+      - ./database_dump.sql:/docker-entrypoint-initdb.d/init.sql
+      - movies_data:/var/lib/postgresql/data/
+    env_file:
+      - ./.env
+    environment:
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_NAME}
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres -d ${DB_NAME}" ]
+      interval: 30s
+      retries: 5
+      timeout: 30s
+
+  es:
+    image: elasticsearch:8.6.2
+    container_name: movies_es
+    restart: always
+    volumes:
+      - movies_es:/usr/share/elasticsearch/data
+    env_file:
+      - ./.env
+    ports:
+      - "9200:9200"
+    expose:
+      - "9200"
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms200m -Xmx200m"
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl --fail http://localhost:9200 || exit 1"]
+      interval: 10s
+      retries: 5
+      timeout: 10s
+
+  redis:
+    image: redis:7.4.1-alpine
+    container_name: movies_redis
+    restart: always
+    environment:
+      ALLOW_EMPTY_PASSWORD: "yes"
+    healthcheck:
+      test: redis-cli ping
+      interval: 1s
+      timeout: 3s
+      retries: 50
+
+volumes:
+  movies_data:
+  movies_es:
+  static_volume:
+  media_volume:
