@@ -24,6 +24,19 @@ services:
       es:
         condition: service_healthy
 
+  api:
+    build: theater-async-api
+    container_name: movies_api
+    env_file:
+      - ./.env
+    ports:
+      - "5000:5000"
+    depends_on:
+      redis:
+        condition: service_healthy
+      es:
+        condition: service_healthy
+
   nginx:
     image: nginx:latest
     container_name: movies_nginx
