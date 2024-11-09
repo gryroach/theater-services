@@ -2,15 +2,14 @@ import json
 from functools import lru_cache
 from uuid import UUID
 
-from elasticsearch import AsyncElasticsearch, NotFoundError
-from fastapi import Depends
-from redis.asyncio import Redis
-
 from db.elastic import get_elastic
 from db.redis import get_redis
+from elasticsearch import AsyncElasticsearch, NotFoundError
+from fastapi import Depends
 from models.enums import FilmsSortOptions
 from models.film import Film
 from models.genre import Genre
+from redis.asyncio import Redis
 
 FILM_CACHE_EXPIRE_IN_SECONDS = 60 * 5  # 5 минут
 
@@ -37,12 +36,16 @@ class FilmService:
         page_number: int,
         genre: UUID | None,
     ) -> list[Film]:
-        films = await self._films_from_cache(sort, page_size, page_number, genre)
+        films = await self._films_from_cache(
+            sort, page_size, page_number, genre
+        )
         if not films:
             films = await self._get_films_from_elastic(
                 sort, page_size, page_number, genre
             )
-        await self._put_films_to_cache(sort, page_size, page_number, genre, films)
+        await self._put_films_to_cache(
+            sort, page_size, page_number, genre, films
+        )
         return films
 
     async def _get_film_from_elastic(self, film_id: str) -> list[Film] | None:
@@ -69,16 +72,20 @@ class FilmService:
         query = {"match_all": {}}
 
         if genre:
-            if genre_record := await self._get_genre_from_elastic( genre):
-                query = {"bool": {"filter": [{"term": {"genres": genre_record.name}}]}}
+            if genre_record := await self._get_genre_from_elastic(genre):
+                query = {
+                    "bool": {
+                        "filter": [{"term": {"genres": genre_record.name}}]
+                    }
+                }
 
-        order, row = ('desc', sort[1:]) if sort[0] == '-' else ('asc', sort)
-        sort = [{row: {'order': order}}]
+        order, row = ("desc", sort[1:]) if sort[0] == "-" else ("asc", sort)
+        sort = [{row: {"order": order}}]
         body = {
-            'query': query,
-            'from': (page_number - 1) * page_size,
-            'size': page_size,
-            'sort': sort,
+            "query": query,
+            "from": (page_number - 1) * page_size,
+            "size": page_size,
+            "sort": sort,
         }
         docs = await self.elastic.search(index="movies", body=body)
         return [Film(**hit["_source"]) for hit in docs["hits"]["hits"]]
@@ -109,7 +116,9 @@ class FilmService:
         return films
 
     async def _put_film_to_cache(self, film: Film):
-        await self.redis.set(film.id,  film.model_dump_json(), FILM_CACHE_EXPIRE_IN_SECONDS)
+        await self.redis.set(
+            film.id, film.model_dump_json(), FILM_CACHE_EXPIRE_IN_SECONDS
+        )
 
     async def _put_films_to_cache(
         self,
