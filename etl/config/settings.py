@@ -1,37 +1,50 @@
-from datetime import datetime
-from typing import Any, List, Optional
-from uuid import UUID
+import os
 
-from pydantic import BaseModel
+from dotenv import load_dotenv
 
+# Загружаем переменные из файла .env
+load_dotenv()
 
-class Person(BaseModel):
-    id: str
-    name: str
+POLL_INTERVAL = 10
 
+FIRST_TIME_STARTED = False
 
-class Movie(BaseModel):
-    id: UUID | str
-    title: str
-    description: Optional[str]
-    imdb_rating: Optional[float]
-    genres: List[str]
-    directors_names: List[str]
-    actors_names: List[str]
-    writers_names: List[str]
-    directors: Optional[List[Person]]
-    actors: Optional[List[Person]]
-    writers: Optional[List[Person]]
-    last_modified_date: datetime
+# Параметры для backoff
+MAX_BACKOFF = 60  # максимальное время ожидания в секундах
+BASE_BACKOFF = 5  # базовое время ожидания между попытками в секундах
+MAX_RETRIES = 5  # максимальное количество попыток
 
-    class Config:
-        populate_by_name = True
+# Конфигурация для PostgreSQL
+POSTGRES_CONFIG = {
+    "dbname": os.getenv("DB_NAME"),
+    "user": os.getenv("DB_USER"),
+    "password": os.getenv("DB_PASSWORD"),
+    "host": os.getenv("DB_HOST", "localhost"),
+    "port": int(os.getenv("DB_PORT", 5432)),
+    "options": os.getenv("DB_OPTIONS", ""),
+}
 
-    def model_post_init(self, __context: Any) -> None:
-        if isinstance(self.id, UUID):
-            self.id = str(self.id)
+# Конфигурация для Elasticsearch
+ES_CONFIG = {
+    "hosts": "{}{}:{}".format(
+        os.getenv("ELASTIC_SCHEMA", "http://"),
+        os.getenv("ES_HOST", "elasticsearch"),
+        os.getenv("ES_PORT", "9200"),
+    ),
+    "verify_certs": os.getenv("ES_VERIFY_CERTS", "false").lower() == "true",
+    "retry_on_timeout": False,
+    "max_retries": 1,
+}
 
+# Конфигурация для Redis
+REDIS_CONFIG = {
+    "host": os.getenv("REDIS_HOST", "redis"),
+    "port": int(os.getenv("REDIS_PORT", 6379)),
+    "db": int(os.getenv("REDIS_DB", 0)),
+    "password": os.getenv("REDIS_PASSWORD", None),
+}
 
+# Схемы для ES
 common_analysis_settings = {
     "filter": {
         "english_stop": {"type": "stop", "stopwords": "_english_"},

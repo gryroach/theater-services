@@ -18,11 +18,6 @@ services:
     container_name: movies_etl
     env_file:
       - ./.env
-    depends_on:
-      db:
-        condition: service_healthy
-      es:
-        condition: service_healthy
 
   api:
     build: theater-async-api
@@ -31,11 +26,6 @@ services:
       - ./.env
     ports:
       - "5000:5000"
-    depends_on:
-      redis:
-        condition: service_healthy
-      es:
-        condition: service_healthy
 
   nginx:
     image: nginx:latest
@@ -72,6 +62,7 @@ services:
   es:
     image: elasticsearch:8.6.2
     container_name: movies_es
+    hostname: elasticsearch
     restart: always
     volumes:
       - movies_es:/usr/share/elasticsearch/data
@@ -84,10 +75,7 @@ services:
     environment:
       - discovery.type=single-node
       - xpack.security.enabled=false
-      - "ES_JAVA_OPTS=-Xms200m -Xmx200m"
-    depends_on:
-      db:
-        condition: service_healthy
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
     healthcheck:
       test: ["CMD-SHELL", "curl --fail http://localhost:9200 || exit 1"]
       interval: 5s
