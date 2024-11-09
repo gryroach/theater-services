@@ -1,7 +1,11 @@
 from pydantic import BaseModel
 
 
-class Film(BaseModel):
+class FilmToList(BaseModel):
     id: str
     title: str
-    description: str
+    imdb_rating: float | None
+
+class Film(FilmToList):
+    description: str | None
+    genres: list[str] | None
