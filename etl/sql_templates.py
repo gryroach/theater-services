@@ -34,7 +34,14 @@ SELECT
         ) FILTER (WHERE p.id is not null and pfw.role='writer'),
         '[]'
     ) as writers,
-    array_agg(DISTINCT g.name) as genres,
+    COALESCE (
+        json_agg(
+            DISTINCT jsonb_build_object(
+                'id', g.id,
+                'name', g.name
+            )
+        ), '[]'
+    ) as genres,
     greatest(MAX(fw.modified), MAX(g.modified), MAX(p.modified)) as last_modified_date
 FROM content.film_work fw
 LEFT JOIN content.person_film_work pfw ON pfw.film_work_id = fw.id

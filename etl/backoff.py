@@ -27,10 +27,17 @@ def backoff(start_sleep_time=0.1, factor=2, border_sleep_time=10):
                 try:
                     return func(*args, **kwargs)
                 except Exception as e:
-                    logger.error(f'Функция {func.__name__} упала с ошибкой %s', e)
+                    logger.error(
+                        f"Функция {func.__name__} упала с ошибкой %s",
+                        e,
+                        exc_info=True,
+                    )
                     n += 1
-                    time_ = min(start_sleep_time * (factor ** n), border_sleep_time)
+                    time_ = min(
+                        start_sleep_time * (factor**n), border_sleep_time
+                    )
                     sleep(time_)
 
         return inner
+
     return func_wrapper

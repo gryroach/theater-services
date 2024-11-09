@@ -3,9 +3,8 @@ import datetime
 import json
 from typing import Any, Dict, Optional
 
-from redis import Redis
-
 from logger import logger
+from redis import Redis
 
 
 class BaseStorage(abc.ABC):
@@ -37,7 +36,7 @@ class JsonFileStorage(BaseStorage):
 
     def save_state(self, state: Dict[str, Any]) -> None:
         """Сохранить состояние в хранилище."""
-        with open(self.file_path, 'w') as file:
+        with open(self.file_path, "w") as file:
             json.dump(state, file)
 
     def retrieve_state(self) -> Dict[str, Any]:
@@ -48,10 +47,10 @@ class JsonFileStorage(BaseStorage):
                     state = json.load(file)
                 except (FileNotFoundError, json.JSONDecodeError) as e:
                     state = {}
-                    logger.error('Произошла ошибка: %s', e, exc_info=True)
+                    logger.error("Произошла ошибка: %s", e, exc_info=True)
                 return state
         except FileNotFoundError:
-            logger.error('Файл %s не найден.', self.file_path)
+            logger.error("Файл %s не найден.", self.file_path)
             return {}
 
 
@@ -60,12 +59,15 @@ class RedisStorage(BaseStorage):
 
     def __init__(self) -> None:
         self.connection: Redis = Redis.from_url(
-            "redis://redis:6379/0",
-            decode_responses=True
+            "redis://redis:6379/0", decode_responses=True
         )
 
     def save_state(self, state: dict[str, Any]) -> None:
-        """Сохранить состояние в хранилище."""
+        """Сохранить состояние в хранилище, преобразуя булевы значения в строки."""
+        state = {
+            key: str(value) if isinstance(value, bool) else value
+            for key, value in state.items()
+        }
         self.connection.mset(state)
 
     def retrieve_state(self) -> dict[str, Any]:
@@ -85,6 +87,8 @@ class State:
     def set_state(self, key: str, value: Any) -> None:
         """Установить состояние для определённого ключа."""
         state = self.storage.retrieve_state()
+        if isinstance(value, bool):
+            value = str(value)
         state[key] = value
         self.storage.save_state(state)
 
