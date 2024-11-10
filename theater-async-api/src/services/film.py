@@ -1,6 +1,11 @@
+<<<<<<< HEAD
 import json
 from functools import lru_cache
 from uuid import UUID
+=======
+from functools import lru_cache
+from typing import Optional
+>>>>>>> main
 
 from elasticsearch import AsyncElasticsearch, NotFoundError
 from fastapi import Depends
@@ -8,9 +13,13 @@ from redis.asyncio import Redis
 
 from db.elastic import get_elastic
 from db.redis import get_redis
+<<<<<<< HEAD
 from models.enums import FilmsSortOptions
 from models.film import Film
 from models.genre import Genre
+=======
+from models.film import Film
+>>>>>>> main
 
 FILM_CACHE_EXPIRE_IN_SECONDS = 60 * 5  # 5 минут
 
@@ -20,7 +29,11 @@ class FilmService:
         self.redis = redis
         self.elastic = elastic
 
+<<<<<<< HEAD
     async def get_by_id(self, film_id: str) -> Film | None:
+=======
+    async def get_by_id(self, film_id: str) -> Optional[Film]:
+>>>>>>> main
         film = await self._film_from_cache(film_id)
         if not film:
             film = await self._get_film_from_elastic(film_id)
@@ -30,6 +43,7 @@ class FilmService:
 
         return film
 
+<<<<<<< HEAD
     async def get_films(
         self,
         sort: FilmsSortOptions,
@@ -84,6 +98,16 @@ class FilmService:
         return [Film(**hit["_source"]) for hit in docs["hits"]["hits"]]
 
     async def _film_from_cache(self, film_id: str) -> Film | None:
+=======
+    async def _get_film_from_elastic(self, film_id: str) -> Optional[Film]:
+        try:
+            doc = await self.elastic.get(index='movies', id=film_id)
+        except NotFoundError:
+            return None
+        return Film(**doc['_source'])
+
+    async def _film_from_cache(self, film_id: str) -> Optional[Film]:
+>>>>>>> main
         data = await self.redis.get(film_id)
         if not data:
             return None
@@ -91,6 +115,7 @@ class FilmService:
         film = Film.model_validate_json(data)
         return film
 
+<<<<<<< HEAD
     async def _films_from_cache(
         self,
         sort: str,
@@ -128,11 +153,20 @@ class FilmService:
         sort: str, page_size: int, page_number: int, genre: UUID | None
     ) -> str:
         return f"movies_{sort}_{page_size}_{page_number}_{genre}"
+=======
+    async def _put_film_to_cache(self, film: Film):
+        await self.redis.set(film.id, film.model_dump_json(), FILM_CACHE_EXPIRE_IN_SECONDS)
+>>>>>>> main
 
 
 @lru_cache()
 def get_film_service(
+<<<<<<< HEAD
     redis: Redis = Depends(get_redis),
     elastic: AsyncElasticsearch = Depends(get_elastic),
+=======
+        redis: Redis = Depends(get_redis),
+        elastic: AsyncElasticsearch = Depends(get_elastic),
+>>>>>>> main
 ) -> FilmService:
     return FilmService(redis, elastic)

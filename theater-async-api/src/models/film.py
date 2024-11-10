@@ -1,6 +1,7 @@
 from pydantic import BaseModel
 
 
+<<<<<<< HEAD
 class FilmShort(BaseModel):
     id: str
     title: str
@@ -9,3 +10,9 @@ class FilmShort(BaseModel):
 class Film(FilmShort):
     description: str | None
     genres: list[str] | None
+=======
+class Film(BaseModel):
+    id: str
+    title: str
+    description: str
+>>>>>>> main
