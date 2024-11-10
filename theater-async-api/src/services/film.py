@@ -76,7 +76,7 @@ class FilmService:
         sort = [{row: {'order': order}}]
         body = {
             'query': query,
-            'from': page_number,
+            'from': (page_number - 1) * page_size,
             'size': page_size,
             'sort': sort,
         }
