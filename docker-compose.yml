@@ -9,6 +9,8 @@ services:
       - media_volume:/opt/app/media
     env_file:
       - ./.env
+    expose:
+      - "8000"
     depends_on:
       db:
         condition: service_healthy
@@ -18,14 +20,26 @@ services:
     container_name: movies_etl
     env_file:
       - ./.env
+    depends_on:
+      db:
+        condition: service_healthy
+      es:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
 
   api:
     build: theater-async-api
     container_name: movies_api
     env_file:
       - ./.env
-    ports:
-      - "5000:5000"
+    expose:
+      - "5000"
+    depends_on:
+      redis:
+        condition: service_healthy
+      es:
+        condition: service_healthy
 
   nginx:
     image: nginx:latest
@@ -36,8 +50,6 @@ services:
       - ./configs/nginx/sites:/etc/nginx/conf.d:ro
       - static_volume:/opt/app/static
       - media_volume:/opt/app/media
-    depends_on:
-      - web
     ports:
       - "80:80"
 
@@ -53,6 +65,8 @@ services:
     environment:
       - POSTGRES_PASSWORD=${DB_PASSWORD}
       - POSTGRES_DB=${DB_NAME}
+    expose:
+      - "5432"
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U postgres -d ${DB_NAME}" ]
       interval: 5s
@@ -68,14 +82,12 @@ services:
       - movies_es:/usr/share/elasticsearch/data
     env_file:
       - ./.env
-    ports:
-      - "9200:9200"
     expose:
       - "9200"
     environment:
       - discovery.type=single-node
       - xpack.security.enabled=false
-      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
     healthcheck:
       test: ["CMD-SHELL", "curl --fail http://localhost:9200 || exit 1"]
       interval: 5s
