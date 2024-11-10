@@ -2,7 +2,7 @@ import logging
 import os
 from contextlib import asynccontextmanager
 
-from api.v1 import films, genre, person
+from api.v1 import genre, person
 from core import config
 from db import elastic, redis
 from dotenv import load_dotenv
@@ -56,6 +56,5 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-app.include_router(films.router, prefix="/api/v1/films", tags=["films"])
 app.include_router(person.router, prefix="/api/v1/persons", tags=["persons"])
 app.include_router(genre.router, prefix="/api/v1/genres", tags=["genres"])

@@ -1,0 +1,14 @@
+[project]
+name = "theater-async-api"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "elasticsearch-dsl>=8.15.4",
+    "elasticsearch[async]>=8.15.1",
+    "fastapi[standard]>=0.115.4",
+    "orjson>=3.10.11",
+    "redis>=5.2.0",
+    "uvicorn>=0.32.0",
+]
