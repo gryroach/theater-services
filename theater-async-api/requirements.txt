@@ -44,4 +44,3 @@ uvloop==0.21.0
 watchfiles==0.24.0
 websockets==13.1
 yarl==1.17.1
-elasticsearch-dsl==8.15.4
