@@ -1,6 +1,9 @@
-elasticsearch==8.6.2
-psycopg[binary]==3.1.18
-pydantic==2.7.1
-pydantic-settings==2.3.4
+backoff==2.2.1
+certifi==2024.8.30
+elastic-transport==8.15.1
+elasticsearch==8.15.1
+psycopg2-binary==2.9.10
 python-dotenv==1.0.1
 redis==5.2.0
+urllib3==2.2.3
+requests==2.32.3
