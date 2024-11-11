@@ -1,5 +1,3 @@
-import logging
-import os
 from contextlib import asynccontextmanager
 
 from api.v1 import genre, person
@@ -10,27 +8,6 @@ from elasticsearch import AsyncElasticsearch
 from fastapi import FastAPI
 from fastapi.responses import ORJSONResponse
 from redis.asyncio import Redis
-
-# Загружаем переменные окружения из файла .env
-load_dotenv()
-
-
-# Функция для преобразования строкового уровня в объект уровня логирования
-def get_log_level(level_name):
-    levels = {
-        "DEBUG": logging.DEBUG,
-        "INFO": logging.INFO,
-        "WARNING": logging.WARNING,
-        "ERROR": logging.ERROR,
-        "CRITICAL": logging.CRITICAL,
-    }
-    return levels.get(level_name.upper(), logging.INFO)  # По умолчанию INFO
-
-
-logging.basicConfig(
-    level=get_log_level(os.getenv("CONSOLE_LOG_LEVEL", "INFO")),
-    format="%(asctime)s - %(levelname)s - %(message)s",
-)
 
 
 @asynccontextmanager

@@ -1,10 +1,29 @@
+import logging
 import os
 from logging import config as logging_config
 
 from core.logger import LOGGING
+from dotenv import load_dotenv
 
-# Применяем настройки логирования
+load_dotenv()
 logging_config.dictConfig(LOGGING)
+
+
+def get_log_level(level_name):
+    levels = {
+        "DEBUG": logging.DEBUG,
+        "INFO": logging.INFO,
+        "WARNING": logging.WARNING,
+        "ERROR": logging.ERROR,
+        "CRITICAL": logging.CRITICAL,
+    }
+    return levels.get(level_name.upper(), logging.INFO)
+
+
+logging.basicConfig(
+    level=get_log_level(os.getenv("CONSOLE_LOG_LEVEL", "INFO")),
+    format="%(asctime)s - %(levelname)s - %(message)s",
+)
 
 # Название проекта. Используется в Swagger-документации
 PROJECT_NAME = os.getenv("PROJECT_NAME", "Read-only API для онлайн-кинотеатра")

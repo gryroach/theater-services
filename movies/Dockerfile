@@ -13,9 +13,9 @@ ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 
 RUN  mkdir -p /var/www/static/ \
-     && mkdir -p /var/www/media/ \
-     && mkdir -p /opt/app/static/ \
-     && mkdir -p /opt/app/media/
+  && mkdir -p /var/www/media/ \
+  && mkdir -p /opt/app/static/ \
+  && mkdir -p /opt/app/media/
 
 COPY django-entrypoint.sh django-entrypoint.sh
 
