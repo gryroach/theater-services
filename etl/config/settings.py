@@ -149,13 +149,13 @@ persons_schema = {
         "properties": {
             "id": {"type": "keyword"},
             "full_name": {"type": "text", "analyzer": "ru_en"},
-            "roles": {"type": "keyword"},
             "films": {
                 "type": "nested",
                 "properties": {
                     "id": {"type": "keyword"},
                     "title": {"type": "text", "analyzer": "ru_en"},
                     "imdb_rating": {"type": "float"},
+                    "roles": {"type": "keyword"},
                 },
             },
         },
