@@ -2,13 +2,14 @@ import logging
 from functools import lru_cache
 from uuid import UUID
 
-from db.elastic import get_elastic
-from db.redis import get_redis
 from elasticsearch import AsyncElasticsearch, NotFoundError
 from fastapi import Depends
+from redis.asyncio import Redis
+
+from db.elastic import get_elastic
+from db.redis import get_redis
 from models.film import FilmShort
 from models.genre import Genre
-from redis.asyncio import Redis
 
 logger = logging.getLogger(__name__)
 

@@ -2,14 +2,15 @@ import json
 from functools import lru_cache
 from uuid import UUID
 
-from db.elastic import get_elastic
-from db.redis import get_redis
 from elasticsearch import AsyncElasticsearch, NotFoundError
 from fastapi import Depends
+from redis.asyncio import Redis
+
+from db.elastic import get_elastic
+from db.redis import get_redis
 from models.enums import FilmsSortOptions
 from models.film import Film
 from models.genre import Genre
-from redis.asyncio import Redis
 
 FILM_CACHE_EXPIRE_IN_SECONDS = 60 * 5  # 5 минут
 
