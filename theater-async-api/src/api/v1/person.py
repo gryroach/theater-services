@@ -12,7 +12,7 @@ router = APIRouter()
 
 
 @router.get("/search/", response_model=SearchResponse)
-async def films_search(
+async def persons_search(
     page_size: int = Query(default=10, ge=1, le=50),
     page_number: int = Query(default=1, ge=1),
     query: str = Query(default=""),
