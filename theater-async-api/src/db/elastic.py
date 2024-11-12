@@ -1,10 +1,10 @@
-from enum import StrEnum
+from enum import Enum
 from typing import Optional
 
 from elasticsearch import AsyncElasticsearch
 
 
-class EsIndexes(StrEnum):
+class EsIndexes(Enum):
     movies = "movies"
     genres = "genres"
     persons = "persons"

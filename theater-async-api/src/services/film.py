@@ -42,7 +42,7 @@ class FilmService:
             films = await self._get_films_from_elastic(
                 sort, page_size, page_number, genre
             )
-        await self._put_films_to_cache(sort, page_size, page_number, genre, films)
+            await self._put_films_to_cache(sort, page_size, page_number, genre, films)
         return films
 
     async def _get_film_from_elastic(self, film_id: str) -> Film | None:
