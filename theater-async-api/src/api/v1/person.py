@@ -1,11 +1,27 @@
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from models.film import FilmShort
-from models.person import Person
+
+from db.elastic import EsIndexes
+from models import FilmShort, Person
+from models.common import SearchResponse
 from services.person import PersonService, get_person_service
+from services.search import SearchService, get_search_service
 
 router = APIRouter()
+
+
+@router.get("/search/", response_model=SearchResponse)
+async def persons_search(
+    page_size: int = Query(default=10, ge=1, le=50),
+    page_number: int = Query(default=1, ge=1),
+    query: str = Query(default=""),
+    search_service: SearchService = Depends(get_search_service),
+):
+    persons = await search_service.search(
+        EsIndexes.persons.value, query, page_size, page_number
+    )
+    return persons
 
 
 @router.get("/", response_model=list[Person])

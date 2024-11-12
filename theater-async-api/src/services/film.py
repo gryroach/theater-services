@@ -2,14 +2,15 @@ import json
 from functools import lru_cache
 from uuid import UUID
 
-from db.elastic import get_elastic
-from db.redis import get_redis
 from elasticsearch import AsyncElasticsearch, NotFoundError
 from fastapi import Depends
+from redis.asyncio import Redis
+
+from db.elastic import EsIndexes, get_elastic
+from db.redis import get_redis
 from models.enums import FilmsSortOptions
 from models.film import Film
 from models.genre import Genre
-from redis.asyncio import Redis
 
 FILM_CACHE_EXPIRE_IN_SECONDS = 60 * 5  # 5 минут
 
@@ -36,28 +37,24 @@ class FilmService:
         page_number: int,
         genre: UUID | None,
     ) -> list[Film]:
-        films = await self._films_from_cache(
-            sort, page_size, page_number, genre
-        )
+        films = await self._films_from_cache(sort, page_size, page_number, genre)
         if not films:
             films = await self._get_films_from_elastic(
                 sort, page_size, page_number, genre
             )
-        await self._put_films_to_cache(
-            sort, page_size, page_number, genre, films
-        )
+        await self._put_films_to_cache(sort, page_size, page_number, genre, films)
         return films
 
-    async def _get_film_from_elastic(self, film_id: str) -> list[Film] | None:
+    async def _get_film_from_elastic(self, film_id: str) -> Film | None:
         try:
-            doc = await self.elastic.get(index="movies", id=film_id)
+            doc = await self.elastic.get(index=EsIndexes.movies.value, id=film_id)
         except NotFoundError:
             return None
         return Film(**doc["_source"])
 
     async def _get_genre_from_elastic(self, genre: str | UUID):
         try:
-            doc = await self.elastic.get(index="genres", id=genre)
+            doc = await self.elastic.get(index=EsIndexes.genres.value, id=genre)
         except NotFoundError:
             return None
         return Genre(**doc["_source"])
@@ -87,7 +84,7 @@ class FilmService:
             "size": page_size,
             "sort": sort,
         }
-        docs = await self.elastic.search(index="movies", body=body)
+        docs = await self.elastic.search(index=EsIndexes.movies.value, body=body)
         return [Film(**hit["_source"]) for hit in docs["hits"]["hits"]]
 
     async def _film_from_cache(self, film_id: str) -> Film | None:

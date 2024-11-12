@@ -1,11 +1,27 @@
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from models.film import FilmShort
-from models.genre import Genre
+
+from db.elastic import EsIndexes
+from models import FilmShort, Genre
+from models.common import SearchResponse
 from services.genre import GenreService, get_genre_service
+from services.search import SearchService, get_search_service
 
 router = APIRouter()
+
+
+@router.get("/search/", response_model=SearchResponse)
+async def genres_search(
+    page_size: int = Query(default=10, ge=1, le=50),
+    page_number: int = Query(default=1, ge=1),
+    query: str = Query(default=""),
+    search_service: SearchService = Depends(get_search_service),
+):
+    genres = await search_service.search(
+        EsIndexes.genres.value, query, page_size, page_number
+    )
+    return genres
 
 
 @router.get("/", response_model=list[Genre])

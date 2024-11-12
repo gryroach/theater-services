@@ -75,7 +75,6 @@ class Transformer:
         return {
             "id": record.get("id"),
             "full_name": record.get("full_name"),
-            "roles": record.get("roles", []),
             "films": record.get("films", []),
         }
 

@@ -1,22 +1,20 @@
 from contextlib import asynccontextmanager
 
-from api.v1 import genre, person
-from core import config
-from db import elastic, redis
-from dotenv import load_dotenv
 from elasticsearch import AsyncElasticsearch
 from fastapi import FastAPI
 from fastapi.responses import ORJSONResponse
 from redis.asyncio import Redis
+
+from api.v1.base import api_router as api_v1_router
+from core import config
+from db import elastic, redis
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     redis.redis = Redis(host=config.REDIS_HOST, port=config.REDIS_PORT)
     elastic.es = AsyncElasticsearch(
-        hosts=[
-            f"{config.ELASTIC_SCHEMA}{config.ELASTIC_HOST}:{config.ELASTIC_PORT}"
-        ]
+        hosts=[f"{config.ELASTIC_SCHEMA}{config.ELASTIC_HOST}:{config.ELASTIC_PORT}"]
     )
     yield
     await redis.redis.close()
@@ -33,5 +31,4 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-app.include_router(person.router, prefix="/api/v1/persons", tags=["persons"])
-app.include_router(genre.router, prefix="/api/v1/genres", tags=["genres"])
+app.include_router(api_v1_router, prefix="/api/v1")

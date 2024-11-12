@@ -16,4 +16,4 @@ ENV PYTHONPATH="./src"
 RUN uv sync --frozen --no-cache
 
 # Run the application.
-ENTRYPOINT ["uv", "run", "fastapi", "dev", "src/main.py", "--host", "0.0.0.0", "--port", "5000"]
+ENTRYPOINT ["bash", "entrypoint.sh"]

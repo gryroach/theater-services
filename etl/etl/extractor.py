@@ -80,29 +80,30 @@ class Extractor:
             return []
         placeholders = ", ".join(["%s"] * len(person_ids))
         query = f"""
-        SELECT p.id, p.full_name, pfw.role, fw.id AS film_id, fw.title AS film_title
+        SELECT p.id, p.full_name,
+               COALESCE(
+                   json_agg(
+                       DISTINCT jsonb_build_object(
+                           'id', fw.id,
+                           'title', fw.title,
+                           'roles', roles
+                       )
+                   ),
+                   '[]'
+               ) as films
         FROM content.person p
         LEFT JOIN content.person_film_work pfw ON p.id = pfw.person_id
         LEFT JOIN content.film_work fw ON pfw.film_work_id = fw.id
-        WHERE p.id IN ({placeholders});
+        LEFT JOIN (
+            SELECT pfw.person_id, fw.id, fw.title, array_agg(pfw.role) as roles
+            FROM content.person_film_work pfw
+            JOIN content.film_work fw ON pfw.film_work_id = fw.id
+            GROUP BY pfw.person_id, fw.id, fw.title
+        ) sub ON p.id = sub.person_id and fw.id=sub.id 
+        WHERE p.id IN ({placeholders})
+        GROUP BY p.id, p.full_name;
         """
-        persons = self._fetch_data(query, tuple(person_ids))
-        person_map = {}
-        for person in persons:
-            person_id = person["id"]
-            if person_id not in person_map:
-                person_map[person_id] = {
-                    "id": person["id"],
-                    "full_name": person["full_name"],
-                    "roles": [],
-                    "films": [],
-                }
-            if person.get("role"):
-                person_map[person_id]["roles"].append(person["role"])
-            if person.get("film_id") and person.get("film_title"):
-                film = {"id": person["film_id"], "title": person["film_title"]}
-                person_map[person_id]["films"].append(film)
-        return list(person_map.values())
+        return self._fetch_data(query, tuple(person_ids))
 
     def fetch_modified_genres(
         self, last_modified: str, batch_size: int = 100
@@ -131,9 +132,7 @@ class Extractor:
         ORDER BY fw.modified
         LIMIT %s;
         """
-        return self._fetch_data(
-            query, (self.convert_to_uuid(person_ids), batch_size)
-        )
+        return self._fetch_data(query, (self.convert_to_uuid(person_ids), batch_size))
 
     def fetch_related_filmworks_by_genre(
         self, genre_ids: List[str], batch_size: int = 100
@@ -149,9 +148,7 @@ class Extractor:
         ORDER BY fw.modified
         LIMIT %s;
         """
-        return self._fetch_data(
-            query, (self.convert_to_uuid(genre_ids), batch_size)
-        )
+        return self._fetch_data(query, (self.convert_to_uuid(genre_ids), batch_size))
 
     def fetch_full_filmwork_data(self, filmwork_ids: List[str]) -> List[Dict]:
         """Получает полные данные о фильмах, включая персоналии и жанры."""
