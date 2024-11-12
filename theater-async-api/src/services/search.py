@@ -6,11 +6,16 @@ from fastapi import Depends
 from pydantic import BaseModel
 from redis.asyncio import Redis
 
+from core.config import (
+    FILM_CACHE_EXPIRE_IN_SECONDS,
+    GENRE_CACHE_EXPIRE_IN_SECONDS,
+    PERSON_CACHE_EXPIRE_IN_SECONDS,
+)
 from db.elastic import EsIndexes, get_elastic
 from db.redis import get_redis
 from models import FilmShort, Genre, Person
 from models.common import SearchResponse
-from services.base import BaseEsService
+from services.base import BaseCacheService
 
 
 @dataclass
@@ -35,7 +40,7 @@ INDEX_SEARCH_FIELDS: dict[str, IndexMetaData] = {
 }
 
 
-class SearchService(BaseEsService):
+class SearchService(BaseCacheService):
     async def search(
         self,
         query_string: str,
@@ -43,7 +48,7 @@ class SearchService(BaseEsService):
         page_number: int,
     ) -> SearchResponse:
         result = await self.get_data_from_cache(
-            True,
+            single=True,
             query_string=query_string,
             page_size=page_size,
             page_number=page_number,
@@ -87,12 +92,13 @@ class SearchService(BaseEsService):
 def get_films_search_service(
     redis: Redis = Depends(get_redis),
     elastic: AsyncElasticsearch = Depends(get_elastic),
-    index_name: str = EsIndexes.movies.value,
-    model: type[BaseModel] = SearchResponse,
-    cache_expire: int = 60,
 ) -> SearchService:
     return SearchService(
-        redis, elastic, index_name, model, cache_expire
+        redis,
+        elastic,
+        EsIndexes.movies.value,
+        SearchResponse,
+        cache_expire=FILM_CACHE_EXPIRE_IN_SECONDS,
     )
 
 
@@ -100,19 +106,25 @@ def get_films_search_service(
 def get_genres_search_service(
     redis: Redis = Depends(get_redis),
     elastic: AsyncElasticsearch = Depends(get_elastic),
-    index_name: str = EsIndexes.genres.value,
-    model: type[BaseModel] = SearchResponse,
-    cache_expire: int = 60,
 ) -> SearchService:
-    return SearchService(redis, elastic, index_name, model, cache_expire)
+    return SearchService(
+        redis,
+        elastic,
+        EsIndexes.genres.value,
+        SearchResponse,
+        cache_expire=GENRE_CACHE_EXPIRE_IN_SECONDS,
+    )
 
 
 @lru_cache()
 def get_persons_search_service(
     redis: Redis = Depends(get_redis),
     elastic: AsyncElasticsearch = Depends(get_elastic),
-    index_name: str = EsIndexes.persons.value,
-    model: type[BaseModel] = SearchResponse,
-    cache_expire: int = 60,
 ) -> SearchService:
-    return SearchService(redis, elastic, index_name, model, cache_expire)
+    return SearchService(
+        redis,
+        elastic,
+        EsIndexes.persons.value,
+        SearchResponse,
+        cache_expire=PERSON_CACHE_EXPIRE_IN_SECONDS,
+    )

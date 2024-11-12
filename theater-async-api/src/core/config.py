@@ -40,3 +40,8 @@ ELASTIC_SCHEMA = os.getenv("ELASTIC_SCHEMA", "http://")
 
 # Корень проекта
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+# Кеширование
+FILM_CACHE_EXPIRE_IN_SECONDS = 60 * 5  # 5 минут
+PERSON_CACHE_EXPIRE_IN_SECONDS = 60 * 10  # 10 минут
+GENRE_CACHE_EXPIRE_IN_SECONDS = 60 * 20  # 20 минут
