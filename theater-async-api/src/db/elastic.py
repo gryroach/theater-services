@@ -1,13 +1,13 @@
-from enum import Enum
+from enum import StrEnum
 from typing import Optional
 
 from elasticsearch import AsyncElasticsearch
 
 
-class EsIndexes(Enum):
-    movies: str = "movies"
-    genres: str = "genres"
-    persons: str = "persons"
+class EsIndexes(StrEnum):
+    movies = "movies"
+    genres = "genres"
+    persons = "persons"
 
 
 es: Optional[AsyncElasticsearch] = None
