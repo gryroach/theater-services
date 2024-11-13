@@ -1,7 +1,6 @@
 import logging
 import uuid
 from contextlib import contextmanager
-from typing import Dict, List
 
 import backoff
 import psycopg2
@@ -44,13 +43,13 @@ def get_db_cursor():
 
 
 class Extractor:
-    def convert_to_uuid(self, ids: List[str]) -> List[str]:
+    def convert_to_uuid(self, ids: list[str]) -> list[str]:
         """Преобразование списка строк в список UUID."""
         return [str(uuid.UUID(id_)) for id_ in ids]
 
     def fetch_new_filmworks(
         self, last_modified: str, batch_size: int = 100
-    ) -> List[Dict]:
+    ) -> list[dict]:
         """Извлекает новые фильмы, добавленные после последней метки времени."""
         query = """
         SELECT id, modified
@@ -63,7 +62,7 @@ class Extractor:
 
     def fetch_modified_persons(
         self, last_modified: str, batch_size: int = 100
-    ) -> List[Dict]:
+    ) -> list[dict]:
         """Извлекает изменённых персон после последней метки времени."""
         query = """
         SELECT id, modified
@@ -74,7 +73,7 @@ class Extractor:
         """
         return self._fetch_data(query, (last_modified, batch_size))
 
-    def fetch_persons_by_ids(self, person_ids: List[str]) -> List[Dict]:
+    def fetch_persons_by_ids(self, person_ids: list[str]) -> list[dict]:
         """Получает персон по списку ID, их роли и фильмы, и преобразует в нужный формат."""
         if not person_ids:
             return []
@@ -107,7 +106,7 @@ class Extractor:
 
     def fetch_modified_genres(
         self, last_modified: str, batch_size: int = 100
-    ) -> List[Dict]:
+    ) -> list[dict]:
         """Извлекает изменённые жанры после последней метки времени."""
         query = """
         SELECT id, modified, name, description
@@ -119,8 +118,8 @@ class Extractor:
         return self._fetch_data(query, (last_modified, batch_size))
 
     def fetch_related_filmworks_by_person(
-        self, person_ids: List[str], batch_size: int = 100
-    ) -> List[Dict]:
+        self, person_ids: list[str], batch_size: int = 100
+    ) -> list[dict]:
         """Извлекает фильмы, связанные с указанными персоналиями."""
         if not person_ids:
             return []
@@ -135,8 +134,8 @@ class Extractor:
         return self._fetch_data(query, (self.convert_to_uuid(person_ids), batch_size))
 
     def fetch_related_filmworks_by_genre(
-        self, genre_ids: List[str], batch_size: int = 100
-    ) -> List[Dict]:
+        self, genre_ids: list[str], batch_size: int = 100
+    ) -> list[dict]:
         """Извлекает фильмы, связанные с указанными жанрами."""
         if not genre_ids:
             return []
@@ -150,7 +149,7 @@ class Extractor:
         """
         return self._fetch_data(query, (self.convert_to_uuid(genre_ids), batch_size))
 
-    def fetch_full_filmwork_data(self, filmwork_ids: List[str]) -> List[Dict]:
+    def fetch_full_filmwork_data(self, filmwork_ids: list[str]) -> list[dict]:
         """Получает полные данные о фильмах, включая персоналии и жанры."""
         if not filmwork_ids:
             return []
@@ -159,7 +158,7 @@ class Extractor:
         genres = self._fetch_genre_data(filmwork_ids)
         return self._combine_data(filmworks, persons, genres)
 
-    def _fetch_filmwork_details(self, filmwork_ids: List[str]) -> List[Dict]:
+    def _fetch_filmwork_details(self, filmwork_ids: list[str]) -> list[dict]:
         query = """
         SELECT id AS fw_id, title, description, rating, type, created, modified
         FROM content.film_work
@@ -167,7 +166,7 @@ class Extractor:
         """
         return self._fetch_data(query, (self.convert_to_uuid(filmwork_ids),))
 
-    def _fetch_person_data(self, filmwork_ids: List[str]) -> List[Dict]:
+    def _fetch_person_data(self, filmwork_ids: list[str]) -> list[dict]:
         query = """
         SELECT pfw.film_work_id, p.id AS person_id, p.full_name AS person_name, pfw.role
         FROM content.person_film_work pfw
@@ -176,7 +175,7 @@ class Extractor:
         """
         return self._fetch_data(query, (self.convert_to_uuid(filmwork_ids),))
 
-    def _fetch_genre_data(self, filmwork_ids: List[str]) -> List[Dict]:
+    def _fetch_genre_data(self, filmwork_ids: list[str]) -> list[dict]:
         query = """
         SELECT gfw.film_work_id, g.id AS genre_id, g.name AS genre_name
         FROM content.genre_film_work gfw
@@ -186,8 +185,8 @@ class Extractor:
         return self._fetch_data(query, (self.convert_to_uuid(filmwork_ids),))
 
     def _combine_data(
-        self, filmworks: List[Dict], persons: List[Dict], genres: List[Dict]
-    ) -> List[Dict]:
+        self, filmworks: list[dict], persons: list[dict], genres: list[dict]
+    ) -> list[dict]:
         """Объединяет данные о фильмах, персоналиях и жанрах."""
         filmwork_dict = {fw["fw_id"]: fw for fw in filmworks}
 
@@ -211,7 +210,7 @@ class Extractor:
 
         return list(filmwork_dict.values())
 
-    def _fetch_data(self, query: str, params: tuple) -> List[Dict]:
+    def _fetch_data(self, query: str, params: tuple) -> list[dict]:
         """Выполняет запрос к БД и возвращает результат."""
         with get_db_cursor() as cursor:
             cursor.execute(query, params)

@@ -1,5 +1,5 @@
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import backoff
 from config.settings import MAX_BACKOFF, MAX_RETRIES
@@ -22,7 +22,7 @@ class Loader:
     def __init__(self, es: Elasticsearch):
         self.es = es
 
-    def create_index(self, index_name: str, schema: Dict[str, Any]) -> None:
+    def create_index(self, index_name: str, schema: dict[str, Any]) -> None:
         """Создает индекс в Elasticsearch, если он не существует."""
         try:
             if not self.es.indices.exists(index=index_name):
@@ -45,7 +45,7 @@ class Loader:
         max_tries=MAX_RETRIES,
         jitter=backoff.random_jitter,
     )
-    def load_data(self, index_name: str, data: List[Dict[str, Any]]) -> None:
+    def load_data(self, index_name: str, data: list[dict[str, Any]]) -> None:
         """Загружает данные в указанный индекс Elasticsearch."""
         actions = []
         for record in data:
@@ -72,7 +72,7 @@ class Loader:
         """Проверяет существование индекса в Elasticsearch."""
         return self.es.indices.exists(index=index_name)
 
-    def delete_index(self, index_name: str) -> Optional[bool]:
+    def delete_index(self, index_name: str) -> bool | None:
         """Удаляет индекс в Elasticsearch, если он существует."""
         try:
             if self.index_exists(index_name):

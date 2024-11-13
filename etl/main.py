@@ -4,7 +4,7 @@ import random
 import time
 from datetime import datetime
 from multiprocessing import Process
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import backoff
 from config.settings import (
@@ -53,7 +53,7 @@ logging.basicConfig(
 class ETLProcess:
     def __init__(
         self,
-        redis_config: Dict[str, Any],
+        redis_config: dict[str, Any],
         first_time: bool = False,
     ) -> None:
         self.redis_manager = RedisStateManager(redis_config)
@@ -177,7 +177,7 @@ class ETLProcess:
         finally:
             self.redis_manager.clear_process_flag(self.process_name)
 
-    def get_last_modified_times(self) -> Dict[str, Optional[datetime]]:
+    def get_last_modified_times(self) -> dict[str, datetime | None]:
         return {
             "person": self.redis_manager.get_last_modified("person"),
             "genre": self.redis_manager.get_last_modified("genre"),
@@ -185,16 +185,16 @@ class ETLProcess:
         }
 
     def get_max_modified_time(
-        self, items: List[Dict[str, Any]]
-    ) -> Optional[datetime]:
+        self, items: list[dict[str, Any]]
+    ) -> datetime | None:
         return max((item["modified"] for item in items), default=None)
 
     def get_filmwork_ids(
         self,
-        modified_persons: List[Dict[str, Any]],
-        modified_genres: List[Dict[str, Any]],
-        new_filmworks: List[Dict[str, Any]],
-    ) -> List[str]:
+        modified_persons: list[dict[str, Any]],
+        modified_genres: list[dict[str, Any]],
+        new_filmworks: list[dict[str, Any]],
+    ) -> list[str]:
         try:
             filmwork_ids_by_person = [
                 fw["id"]
@@ -232,8 +232,8 @@ class ETLProcess:
 
     def process_filmworks(
         self,
-        filmwork_ids: List[str],
-        last_modified_times: Dict[str, Optional[datetime]],
+        filmwork_ids: list[str],
+        last_modified_times: dict[str, datetime | None],
     ) -> None:
         try:
             full_filmwork_data = self.extractor.fetch_full_filmwork_data(
@@ -263,7 +263,7 @@ class ETLProcess:
             raise
 
     def update_last_modified(
-        self, last_modified_times: Dict[str, Optional[datetime]]
+        self, last_modified_times: dict[str, datetime | None]
     ) -> None:
         for table, modified_time in last_modified_times.items():
             if modified_time is not None:
@@ -278,7 +278,7 @@ class ETLProcess:
             )
         )
 
-    def convert_to_datetime(self, modified_time: Any) -> Optional[datetime]:
+    def convert_to_datetime(self, modified_time: Any) -> datetime | None:
         if isinstance(modified_time, str):
             return datetime.fromisoformat(modified_time.replace("Z", "+00:00"))
         return modified_time
@@ -305,13 +305,13 @@ class ETLProcess:
         self.redis_manager.set_last_modified("person", initial_timestamp)
 
 
-def start_etl_process(redis_config: Dict[str, Any], first_time: bool) -> None:
+def start_etl_process(redis_config: dict[str, Any], first_time: bool) -> None:
     etl_process = ETLProcess(redis_config, first_time=first_time)
     etl_process.start()
 
 
 if __name__ == "__main__":
-    processes: List[Process] = []
+    processes: list[Process] = []
     for _ in range(1):
         process = Process(
             target=start_etl_process,
