@@ -1,6 +1,5 @@
 import logging
 from datetime import datetime
-from typing import Optional
 
 import redis
 
@@ -17,7 +16,7 @@ class RedisStateManager:
         self.redis_client = redis.Redis(**config)
         logger.info("Redis client initialized with config: %s", config)
 
-    def get_last_modified(self, table_name: str) -> Optional[str]:
+    def get_last_modified(self, table_name: str) -> str | None:
         """
         Получить время последнего изменения для заданной таблицы.
 

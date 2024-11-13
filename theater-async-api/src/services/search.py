@@ -6,11 +6,7 @@ from fastapi import Depends
 from pydantic import BaseModel
 from redis.asyncio import Redis
 
-from core.config import (
-    FILM_CACHE_EXPIRE_IN_SECONDS,
-    GENRE_CACHE_EXPIRE_IN_SECONDS,
-    PERSON_CACHE_EXPIRE_IN_SECONDS,
-)
+from core.config import settings
 from db.elastic import EsIndexes, get_elastic
 from db.redis import get_redis
 from models import FilmShort, Genre, Person
@@ -98,7 +94,7 @@ def get_films_search_service(
         elastic,
         EsIndexes.movies.value,
         SearchResponse,
-        cache_expire=FILM_CACHE_EXPIRE_IN_SECONDS,
+        cache_expire=settings.film_cache_expire_in_seconds,
     )
 
 
@@ -112,7 +108,7 @@ def get_genres_search_service(
         elastic,
         EsIndexes.genres.value,
         SearchResponse,
-        cache_expire=GENRE_CACHE_EXPIRE_IN_SECONDS,
+        cache_expire=settings.genre_cache_expire_in_seconds,
     )
 
 
@@ -126,5 +122,5 @@ def get_persons_search_service(
         elastic,
         EsIndexes.persons.value,
         SearchResponse,
-        cache_expire=PERSON_CACHE_EXPIRE_IN_SECONDS,
+        cache_expire=settings.person_cache_expire_in_seconds,
     )

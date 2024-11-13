@@ -1,5 +1,4 @@
 from enum import Enum
-from typing import Optional
 
 from elasticsearch import AsyncElasticsearch
 
@@ -10,7 +9,7 @@ class EsIndexes(Enum):
     persons = "persons"
 
 
-es: Optional[AsyncElasticsearch] = None
+es: AsyncElasticsearch | None = None
 
 
 async def get_elastic() -> AsyncElasticsearch:

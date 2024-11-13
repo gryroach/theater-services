@@ -1,12 +1,12 @@
 import logging
-from typing import Any, Dict, List, Union
+from typing import Any
 
 
 class Transformer:
     @staticmethod
     def transform(
-        raw_data: List[Dict[str, Any]], data_type: str
-    ) -> List[Dict[str, Union[str, List[Dict[str, str]]]]]:
+        raw_data: list[dict[str, Any]], data_type: str
+    ) -> list[dict[str, str | list[dict[str, str]]]]:
         """Преобразует необработанные данные в нужный формат на основе типа данных."""
         if data_type == "movies":
             return Transformer.transform_movies(raw_data)
@@ -24,8 +24,8 @@ class Transformer:
 
     @staticmethod
     def transform_movies(
-        raw_data: List[Dict[str, Any]]
-    ) -> List[Dict[str, Any]]:
+        raw_data: list[dict[str, Any]]
+    ) -> list[dict[str, Any]]:
         """Преобразует данные фильмов."""
         transformed_data = []
         for record in raw_data:
@@ -61,7 +61,7 @@ class Transformer:
         return transformed_data
 
     @staticmethod
-    def transform_genre(record: Dict[str, Any]) -> Dict[str, Any]:
+    def transform_genre(record: dict[str, Any]) -> dict[str, Any]:
         """Преобразует запись для индекса жанров."""
         return {
             "id": record.get("id"),
@@ -70,7 +70,7 @@ class Transformer:
         }
 
     @staticmethod
-    def transform_person(record: Dict[str, Any]) -> Dict[str, Any]:
+    def transform_person(record: dict[str, Any]) -> dict[str, Any]:
         """Преобразует запись для индекса персон."""
         return {
             "id": record.get("id"),
@@ -79,7 +79,7 @@ class Transformer:
         }
 
     @staticmethod
-    def extract_genres(record: Dict[str, Any]) -> List[Dict[str, str]]:
+    def extract_genres(record: dict[str, Any]) -> list[dict[str, str]]:
         """Извлекает жанры из записи."""
         return [
             {"id": genre["id"], "name": genre["name"]}
@@ -88,8 +88,8 @@ class Transformer:
 
     @staticmethod
     def extract_people_by_role(
-        record: Dict[str, Any], role: str
-    ) -> List[Dict[str, str]]:
+        record: dict[str, Any], role: str
+    ) -> list[dict[str, str]]:
         """Извлекает людей определенной роли из записи."""
         return [
             {"id": person["id"], "name": person["name"]}

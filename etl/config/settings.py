@@ -28,8 +28,8 @@ POSTGRES_CONFIG = {
 ES_CONFIG = {
     "hosts": "{}{}:{}".format(
         os.getenv("ELASTIC_SCHEMA", "http://"),
-        os.getenv("ES_HOST", "elasticsearch"),
-        os.getenv("ES_PORT", "9200"),
+        os.getenv("ELASTIC_HOST", "elasticsearch"),
+        os.getenv("ELASTIC_PORT", "9200"),
     ),
     "verify_certs": os.getenv("ES_VERIFY_CERTS", "false").lower() == "true",
     "retry_on_timeout": False,
