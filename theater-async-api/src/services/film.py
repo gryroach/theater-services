@@ -5,7 +5,7 @@ from elasticsearch import AsyncElasticsearch, NotFoundError
 from fastapi import Depends
 from redis.asyncio import Redis
 
-from core.config import FILM_CACHE_EXPIRE_IN_SECONDS
+from core.config import settings
 from db.elastic import EsIndexes, get_elastic
 from db.redis import get_redis
 from models.enums import FilmsSortOptions
@@ -98,5 +98,5 @@ def get_film_service(
         EsIndexes.movies.value,
         FilmShort,
         Film,
-        FILM_CACHE_EXPIRE_IN_SECONDS,
+        settings.film_cache_expire_in_seconds,
     )

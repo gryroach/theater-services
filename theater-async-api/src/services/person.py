@@ -6,7 +6,7 @@ from elasticsearch import AsyncElasticsearch, NotFoundError
 from fastapi import Depends
 from redis.asyncio import Redis
 
-from core.config import GENRE_CACHE_EXPIRE_IN_SECONDS
+from core.config import settings
 from db.elastic import EsIndexes, get_elastic
 from db.redis import get_redis
 from models.film import FilmShort
@@ -41,7 +41,10 @@ class PersonService(BaseCacheService):
         self, person_id: UUID, page_size: int, page_number: int
     ) -> list[FilmShort]:
         films = await self.get_data_from_cache(
-            extra=True, id=person_id, page_size=page_size, page_number=page_number,
+            extra=True,
+            id=person_id,
+            page_size=page_size,
+            page_number=page_number,
         )
         if not films:
             films = await self._get_person_films_from_elastic(
@@ -49,7 +52,10 @@ class PersonService(BaseCacheService):
             )
             if films:
                 await self.put_into_cache(
-                    films, id=person_id, page_size=page_size, page_number=page_number,
+                    films,
+                    id=person_id,
+                    page_size=page_size,
+                    page_number=page_number,
                 )
         return films
 
@@ -135,5 +141,5 @@ def get_person_service(
         EsIndexes.persons.value,
         Person,
         FilmShort,
-        GENRE_CACHE_EXPIRE_IN_SECONDS,
+        settings.genre_cache_expire_in_seconds,
     )

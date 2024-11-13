@@ -2,12 +2,15 @@ import logging
 import os
 from logging import config as logging_config
 
-from dotenv import load_dotenv
+from pydantic import Field
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from core.logger import LOGGING
 
-load_dotenv()
 logging_config.dictConfig(LOGGING)
+
+# Корень проекта
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
 def get_log_level(level_name):
@@ -21,27 +24,45 @@ def get_log_level(level_name):
     return levels.get(level_name.upper(), logging.INFO)
 
 
+class Settings(BaseSettings):
+    # Логирование
+    console_log_level: str = Field(default="INFO", alias="CONSOLE_LOG_LEVEL")
+
+    # Название проекта. Используется в Swagger-документации
+    project_name: str = Field(
+        default="Read-only API для онлайн-кинотеатра", alias="PROJECT_NAME"
+    )
+
+    # Настройки Redis
+    redis_host: str = Field(default="127.0.0.1", alias="REDIS_HOST")
+    redis_port: int = Field(default=6379, alias="REDIS_PORT")
+
+    # Настройки Elasticsearch
+    elastic_host: str = Field(default="127.0.0.1", alias="ELASTIC_HOST")
+    elastic_port: int = Field(default=9200, alias="ELASTIC_PORT")
+    elastic_schema: str = Field(default="http://", alias="ELASTIC_SCHEMA")
+
+    # Кеширование
+    film_cache_expire_in_seconds: int = Field(
+        default=60 * 5, alias="FILM_CACHE_EXPIRE_IN_SECONDS"
+    )
+    person_cache_expire_in_seconds: int = Field(
+        default=60 * 10, alias="PERSON_CACHE_EXPIRE_IN_SECONDS"
+    )
+    genre_cache_expire_in_seconds: int = Field(
+        default=60 * 20, alias="GENRE_CACHE_EXPIRE_IN_SECONDS"
+    )
+
+    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
+
+    @property
+    def elasticsearch_url(self) -> str:
+        return f"{self.elastic_schema}{self.elastic_host}:{self.elastic_port}"
+
+
+settings = Settings()
+
 logging.basicConfig(
-    level=get_log_level(os.getenv("CONSOLE_LOG_LEVEL", "INFO")),
+    level=get_log_level(settings.console_log_level),
     format="%(asctime)s - %(levelname)s - %(message)s",
 )
-
-# Название проекта. Используется в Swagger-документации
-PROJECT_NAME = os.getenv("PROJECT_NAME", "Read-only API для онлайн-кинотеатра")
-
-# Настройки Redis
-REDIS_HOST = os.getenv("REDIS_HOST", "127.0.0.1")
-REDIS_PORT = int(os.getenv("REDIS_PORT", 6379))
-
-# Настройки Elasticsearch
-ELASTIC_HOST = os.getenv("ES_HOST", "127.0.0.1")
-ELASTIC_PORT = int(os.getenv("ES_PORT", 9200))
-ELASTIC_SCHEMA = os.getenv("ELASTIC_SCHEMA", "http://")
-
-# Корень проекта
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
-# Кеширование
-FILM_CACHE_EXPIRE_IN_SECONDS = 60 * 5  # 5 минут
-PERSON_CACHE_EXPIRE_IN_SECONDS = 60 * 10  # 10 минут
-GENRE_CACHE_EXPIRE_IN_SECONDS = 60 * 20  # 20 минут
