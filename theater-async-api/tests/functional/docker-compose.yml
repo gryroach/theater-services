@@ -1,0 +1,63 @@
+services:
+  api:
+    build: ../../
+    container_name: tests_api
+    image: tests-api-image
+    env_file:
+      - .env.tests
+    ports:
+      - "5000:5000"
+    depends_on:
+      redis:
+        condition: service_healthy
+      es:
+        condition: service_healthy
+
+  tests:
+    image: tests-api-image
+    container_name: tests_test
+    env_file:
+      - .env.tests
+    environment:
+      - PYTHONPATH=./tests
+    volumes:
+      - ../../tests/functional/src:/app/tests/functional/src
+    entrypoint: >
+      sh -c "uv pip install --system -r tests/functional/requirements.txt
+      && uv run tests/functional/utils/wait_for_es.py
+      && uv run tests/functional/utils/wait_for_redis.py
+      && uv run tests/functional/utils/wait_for_api.py
+      && uv run pytest tests/functional/src -s"
+
+  es:
+    image: elasticsearch:8.6.2
+    container_name: tests_es
+    hostname: elasticsearch
+    restart: always
+    env_file:
+      - .env.tests
+    ports:
+      - "9210:9200"
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    healthcheck:
+      test: [ "CMD-SHELL", "curl --fail http://localhost:9200 || exit 1" ]
+      interval: 5s
+      retries: 5
+      timeout: 5s
+
+  redis:
+    image: redis:7.4.1-alpine
+    container_name: tests_redis
+    restart: always
+    ports:
+      - "6399:6379"
+    environment:
+      ALLOW_EMPTY_PASSWORD: "yes"
+    healthcheck:
+      test: redis-cli ping
+      interval: 1s
+      timeout: 3s
+      retries: 50

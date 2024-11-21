@@ -123,6 +123,7 @@ celerybeat.pid
 
 # Environments
 .env
+theater-async-api/tests/functional/.env.tests
 .venv
 env/
 venv/

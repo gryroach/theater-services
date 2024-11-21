@@ -5,10 +5,10 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
-    "elasticsearch[async]>=8.15.1",
-    "fastapi[standard]>=0.115.4",
-    "orjson>=3.10.11",
-    "pydantic-settings>=2.6.1",
-    "redis>=5.2.0",
-    "uvicorn>=0.32.0",
+    "elasticsearch[async]==8.15.1",
+    "fastapi[standard]==0.115.5",
+    "orjson==3.10.11",
+    "pydantic-settings==2.6.1",
+    "redis==5.2.0",
+    "uvicorn==0.32.0",
 ]
