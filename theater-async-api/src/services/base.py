@@ -57,7 +57,7 @@ class CacheServiceMixin:
         return "_".join(parts)
 
 
-class ElasticServiceMixin:
+class BaseService(CacheServiceMixin):
     def __init__(
         self,
         elastic: AsyncElasticsearch,
@@ -67,10 +67,5 @@ class ElasticServiceMixin:
     ) -> None:
         self.elastic = elastic
         self.index_name = index_name
-
-
-class BaseService(CacheServiceMixin, ElasticServiceMixin):
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
-        CacheServiceMixin.__init__(self, *args, **kwargs)
-        ElasticServiceMixin.__init__(self, *args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.key_prefix = self.index_name
