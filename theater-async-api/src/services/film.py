@@ -16,7 +16,7 @@ from services.base import BaseCacheService
 
 class FilmService(BaseCacheService):
     async def get_film_by_id(self, film_id: str) -> Film | None:
-        film = await self.get_data_from_cache(single=True, extra=True, id=film_id)
+        film = await self.get_data_from_cache(Film, single=True, id=film_id)
         if not film:
             film = await self._get_film_from_elastic(film_id)
             if film is not None:
@@ -31,7 +31,7 @@ class FilmService(BaseCacheService):
         genre: UUID | None,
     ) -> list[FilmShort]:
         films = await self.get_data_from_cache(
-            sort=sort, page_size=page_size, page_number=page_number, genre=genre
+            FilmShort, sort=sort, page_size=page_size, page_number=page_number, genre=genre
         )
         if not films:
             films = await self._get_films_from_elastic(
@@ -96,7 +96,5 @@ def get_film_service(
         redis,
         elastic,
         EsIndexes.movies.value,
-        FilmShort,
-        Film,
         settings.film_cache_expire_in_seconds,
     )

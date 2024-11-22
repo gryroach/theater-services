@@ -1,46 +1,47 @@
 import json
-from typing import Any, TypeVar
+from typing import Any, TypeVar, Protocol
 
 from elasticsearch import AsyncElasticsearch
 from pydantic import BaseModel
 from pydantic.json import pydantic_encoder
-from redis.asyncio import Redis
 
 T = TypeVar("T", bound=BaseModel)
+
+
+class CacheService(Protocol):
+    async def set(self, key: str, value: Any, expire: int) -> None:
+        pass
+
+    async def get(self, key: str) -> Any:
+        pass
 
 
 class BaseCacheService:
     def __init__(
         self,
-        redis: Redis,
+        cache_service: CacheService,
         elastic: AsyncElasticsearch,
         index_name: str,
-        model: type[BaseModel],
-        extra_model: type[BaseModel] | None = None,
         cache_expire: int = 60,
     ):
-        self.redis = redis
+        self.cache_service = cache_service
         self.elastic = elastic
         self.index_name = index_name
-        self.model = model
-        self.extra_model = extra_model
         self.cache_expire = cache_expire
 
     async def put_into_cache(self, data: T | list[T], /, **kwargs: Any):
         value = json.dumps(data, default=pydantic_encoder)
         key = self._generate_key(self.index_name, **kwargs)
-        await self.redis.set(key, value, self.cache_expire)
+        await self.cache_service.set(key, value, self.cache_expire)
 
     async def get_data_from_cache(
-        self, single: bool = False, extra: bool = False, /, **kwargs: Any
+        self, model: type[BaseModel], single: bool = False, /, **kwargs: Any
     ) -> T | list[T] | None:
         key = self._generate_key(self.index_name, **kwargs)
 
-        data = await self.redis.get(key)
+        data = await self.cache_service.get(key)
         if not data:
             return None
-
-        model = self.extra_model if extra else self.model
 
         if single:
             return model.model_validate_json(data)
