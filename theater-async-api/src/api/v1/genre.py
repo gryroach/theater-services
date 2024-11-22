@@ -3,14 +3,14 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 
 from models import FilmShort, Genre
-from models.common import SearchResponse
+from models.search import GenreSearch
 from services.genre import GenreService, get_genre_service
 from services.search import SearchService, get_genres_search_service
 
 router = APIRouter()
 
 
-@router.get("/search/", response_model=SearchResponse)
+@router.get("/search/", response_model=GenreSearch)
 async def genres_search(
     page_size: int = Query(default=10, ge=1, le=50),
     page_number: int = Query(default=1, ge=1),

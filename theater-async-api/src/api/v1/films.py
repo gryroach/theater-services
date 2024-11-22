@@ -3,20 +3,20 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 
 from models import Film, FilmShort, FilmsSortOptions
-from models.common import SearchResponse
+from models.search import FilmSearch
 from services.film import FilmService, get_film_service
 from services.search import SearchService, get_films_search_service
 
 router = APIRouter()
 
 
-@router.get("/search/", response_model=SearchResponse)
+@router.get("/search/", response_model=FilmSearch)
 async def films_search(
     page_size: int = Query(default=10, ge=1, le=50),
     page_number: int = Query(default=1, ge=1),
     query: str = Query(default=""),
     search_service: SearchService = Depends(get_films_search_service),
-) -> SearchResponse:
+) -> FilmSearch:
     films = await search_service.search(query, page_size, page_number)
     return films
 

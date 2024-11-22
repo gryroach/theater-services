@@ -1,22 +1,21 @@
 from functools import lru_cache
 from uuid import UUID
 
-from elasticsearch import AsyncElasticsearch, NotFoundError
-from fastapi import Depends
-from redis.asyncio import Redis
-
 from core.config import settings
 from db.elastic import EsIndexes, get_elastic
 from db.redis import get_redis
+from elasticsearch import AsyncElasticsearch, NotFoundError
+from fastapi import Depends
 from models.enums import FilmsSortOptions
 from models.film import Film, FilmShort
 from models.genre import Genre
-from services.base import BaseCacheService
+from redis.asyncio import Redis
+from services.base import BaseService
 
 
-class FilmService(BaseCacheService):
+class FilmService(BaseService):
     async def get_film_by_id(self, film_id: str) -> Film | None:
-        film = await self.get_data_from_cache(single=True, extra=True, id=film_id)
+        film = await self.get_data_from_cache(Film, single=True, id=film_id)
         if not film:
             film = await self._get_film_from_elastic(film_id)
             if film is not None:
@@ -31,7 +30,11 @@ class FilmService(BaseCacheService):
         genre: UUID | None,
     ) -> list[FilmShort]:
         films = await self.get_data_from_cache(
-            sort=sort, page_size=page_size, page_number=page_number, genre=genre
+            FilmShort,
+            sort=sort,
+            page_size=page_size,
+            page_number=page_number,
+            genre=genre,
         )
         if not films:
             films = await self._get_films_from_elastic(
@@ -57,7 +60,10 @@ class FilmService(BaseCacheService):
 
     async def _get_genre_from_elastic(self, genre: str | UUID):
         try:
-            doc = await self.elastic.get(index=EsIndexes.genres.value, id=genre)
+            doc = await self.elastic.get(
+                index=EsIndexes.genres.value,
+                id=genre,
+            )
         except NotFoundError:
             return None
         return Genre(**doc["_source"])
@@ -73,7 +79,13 @@ class FilmService(BaseCacheService):
 
         if genre:
             if genre_record := await self._get_genre_from_elastic(genre):
-                query = {"bool": {"filter": [{"term": {"genres": genre_record.name}}]}}
+                query = {
+                    "bool": {
+                        "filter": [
+                            {"term": {"genres": genre_record.name}},
+                        ]
+                    }
+                }
 
         order, row = ("desc", sort[1:]) if sort[0] == "-" else ("asc", sort)
         sort = [{row: {"order": order}}]
@@ -93,10 +105,8 @@ def get_film_service(
     elastic: AsyncElasticsearch = Depends(get_elastic),
 ) -> FilmService:
     return FilmService(
-        redis,
-        elastic,
-        EsIndexes.movies.value,
-        FilmShort,
-        Film,
-        settings.film_cache_expire_in_seconds,
+        cache_service=redis,
+        elastic=elastic,
+        index_name=EsIndexes.movies.value,
+        cache_expire=settings.film_cache_expire_in_seconds,
     )

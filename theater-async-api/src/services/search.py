@@ -1,17 +1,16 @@
 from dataclasses import dataclass
 from functools import lru_cache
 
-from elasticsearch import AsyncElasticsearch
-from fastapi import Depends
-from pydantic import BaseModel
-from redis.asyncio import Redis
-
 from core.config import settings
 from db.elastic import EsIndexes, get_elastic
 from db.redis import get_redis
+from elasticsearch import AsyncElasticsearch
+from fastapi import Depends
 from models import FilmShort, Genre, Person
-from models.common import SearchResponse
-from services.base import BaseCacheService
+from models.search import FilmSearch, GenreSearch, PersonSearch, SearchResponse
+from pydantic import BaseModel
+from redis.asyncio import Redis
+from services.base import BaseService
 
 
 @dataclass
@@ -36,14 +35,15 @@ INDEX_SEARCH_FIELDS: dict[str, IndexMetaData] = {
 }
 
 
-class SearchService(BaseCacheService):
+class SearchService(BaseService):
     async def search(
         self,
         query_string: str,
         page_size: int,
         page_number: int,
-    ) -> SearchResponse:
+    ) -> FilmSearch | PersonSearch | GenreSearch:
         result = await self.get_data_from_cache(
+            SearchResponse,
             single=True,
             query_string=query_string,
             page_size=page_size,
@@ -51,7 +51,9 @@ class SearchService(BaseCacheService):
         )
         if not result:
             result = await self._get_search_result(
-                query_string=query_string, page_size=page_size, page_number=page_number
+                query_string=query_string,
+                page_size=page_size,
+                page_number=page_number,
             )
             await self.put_into_cache(
                 result,
@@ -66,7 +68,7 @@ class SearchService(BaseCacheService):
         query_string: str,
         page_size: int,
         page_number: int,
-    ):
+    ) -> FilmSearch | PersonSearch | GenreSearch:
         fields = INDEX_SEARCH_FIELDS[self.index_name].search_fields
         response_type = INDEX_SEARCH_FIELDS[self.index_name].response_type
         query = {"multi_match": {"query": query_string, "fields": fields}}
@@ -76,10 +78,11 @@ class SearchService(BaseCacheService):
             "size": page_size,
         }
         es_result = await self.elastic.search(index=self.index_name, body=body)
-        return SearchResponse(
+        return SearchResponse(  # type: ignore
             count=es_result["hits"]["total"]["value"],
             result=[
-                response_type(**hit["_source"]) for hit in es_result["hits"]["hits"]
+                response_type(**hit["_source"])
+                for hit in es_result["hits"]["hits"]
             ],
         )
 
@@ -90,10 +93,9 @@ def get_films_search_service(
     elastic: AsyncElasticsearch = Depends(get_elastic),
 ) -> SearchService:
     return SearchService(
-        redis,
-        elastic,
-        EsIndexes.movies.value,
-        SearchResponse,
+        cache_service=redis,
+        elastic=elastic,
+        index_name=EsIndexes.movies.value,
         cache_expire=settings.film_cache_expire_in_seconds,
     )
 
@@ -104,10 +106,9 @@ def get_genres_search_service(
     elastic: AsyncElasticsearch = Depends(get_elastic),
 ) -> SearchService:
     return SearchService(
-        redis,
-        elastic,
-        EsIndexes.genres.value,
-        SearchResponse,
+        cache_service=redis,
+        elastic=elastic,
+        index_name=EsIndexes.genres.value,
         cache_expire=settings.genre_cache_expire_in_seconds,
     )
 
@@ -118,9 +119,8 @@ def get_persons_search_service(
     elastic: AsyncElasticsearch = Depends(get_elastic),
 ) -> SearchService:
     return SearchService(
-        redis,
-        elastic,
-        EsIndexes.persons.value,
-        SearchResponse,
+        cache_service=redis,
+        elastic=elastic,
+        index_name=EsIndexes.persons.value,
         cache_expire=settings.person_cache_expire_in_seconds,
     )

@@ -2,24 +2,23 @@ import logging
 from functools import lru_cache
 from uuid import UUID
 
-from elasticsearch import AsyncElasticsearch, NotFoundError
-from fastapi import Depends
-from redis.asyncio import Redis
-
 from core.config import settings
 from db.elastic import EsIndexes, get_elastic
 from db.redis import get_redis
+from elasticsearch import AsyncElasticsearch, NotFoundError
+from fastapi import Depends
 from models.film import FilmShort
 from models.person import Person
-from services.base import BaseCacheService
+from redis.asyncio import Redis
+from services.base import BaseService
 
 logger = logging.getLogger(__name__)
 
 
-class PersonService(BaseCacheService):
+class PersonService(BaseService):
     async def get_all_persons(self, page_size: int, page_number: int) -> list[Person]:
         persons = await self.get_data_from_cache(
-            False, page_size=page_size, page_number=page_number
+            Person, page_size=page_size, page_number=page_number
         )
         if not persons:
             persons = await self._get_all_persons_from_elastic(page_size, page_number)
@@ -30,7 +29,7 @@ class PersonService(BaseCacheService):
         return persons
 
     async def get_person_by_id(self, person_id: UUID) -> Person | None:
-        person = await self.get_data_from_cache(True, id=person_id)
+        person = await self.get_data_from_cache(Person, single=True, id=person_id)
         if not person:
             person = await self._get_person_by_id_from_elastic(person_id)
             if person is not None:
@@ -41,7 +40,7 @@ class PersonService(BaseCacheService):
         self, person_id: UUID, page_size: int, page_number: int
     ) -> list[FilmShort]:
         films = await self.get_data_from_cache(
-            extra=True,
+            FilmShort,
             id=person_id,
             page_size=page_size,
             page_number=page_number,
@@ -136,10 +135,8 @@ def get_person_service(
     elastic: AsyncElasticsearch = Depends(get_elastic),
 ) -> PersonService:
     return PersonService(
-        redis,
-        elastic,
-        EsIndexes.persons.value,
-        Person,
-        FilmShort,
-        settings.genre_cache_expire_in_seconds,
+        cache_service=redis,
+        elastic=elastic,
+        index_name=EsIndexes.persons.value,
+        cache_expire=settings.genre_cache_expire_in_seconds,
     )

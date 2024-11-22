@@ -2,24 +2,23 @@ import logging
 from functools import lru_cache
 from uuid import UUID
 
-from elasticsearch import AsyncElasticsearch, NotFoundError
-from fastapi import Depends
-from redis.asyncio import Redis
-
 from core.config import settings
 from db.elastic import EsIndexes, get_elastic
 from db.redis import get_redis
+from elasticsearch import AsyncElasticsearch, NotFoundError
+from fastapi import Depends
 from models import FilmShort
 from models.genre import Genre
-from services.base import BaseCacheService
+from redis.asyncio import Redis
+from services.base import BaseService
 
 logger = logging.getLogger(__name__)
 
 
-class GenreService(BaseCacheService):
+class GenreService(BaseService):
     async def get_all_genres(self, page_size: int, page_number: int) -> list[Genre]:
         genres = await self.get_data_from_cache(
-            page_size=page_size, page_number=page_number
+            Genre, page_size=page_size, page_number=page_number
         )
         if not genres:
             genres = await self._get_all_genres_from_elastic(page_size, page_number)
@@ -30,7 +29,7 @@ class GenreService(BaseCacheService):
         return genres
 
     async def get_genre_by_id(self, genre_id: UUID) -> Genre | None:
-        genre = await self.get_data_from_cache(single=True, id=genre_id)
+        genre = await self.get_data_from_cache(Genre, single=True, id=genre_id)
         if not genre:
             genre = await self._get_genre_by_id_from_elastic(genre_id)
             if genre is not None:
@@ -41,7 +40,7 @@ class GenreService(BaseCacheService):
         self, genre_id: UUID, page_size: int, page_number: int
     ) -> list[FilmShort]:
         films = await self.get_data_from_cache(
-            extra=True,
+            FilmShort,
             id=genre_id,
             page_size=page_size,
             page_number=page_number,
@@ -117,10 +116,8 @@ def get_genre_service(
     elastic: AsyncElasticsearch = Depends(get_elastic),
 ) -> GenreService:
     return GenreService(
-        redis,
-        elastic,
-        EsIndexes.genres.value,
-        Genre,
-        FilmShort,
-        settings.person_cache_expire_in_seconds,
+        cache_service=redis,
+        elastic=elastic,
+        index_name=EsIndexes.genres.value,
+        cache_expire=settings.person_cache_expire_in_seconds,
     )
