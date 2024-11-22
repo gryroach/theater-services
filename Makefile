@@ -17,3 +17,7 @@ run-etl:
 # Остановка и удаление всех контейнеров
 down:
 	docker compose down
+
+# Запуск тестов и остановка сервисов
+run-functional-tests:
+	bash ./theater-async-api/tests/functional/run_tests.sh

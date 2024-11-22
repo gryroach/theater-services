@@ -50,3 +50,41 @@ make run-etl
 ```shell
 make down
 ```
+
+## Тестирование
+
+### Тестирование API
+
+1. Создайте файл `.env.tests` на основе `.env.tests.example`:
+```shell
+cp .env.tests.example ./theater-async-api/tests/functional/.env.tests
+```
+2. Измените в этом файле переменные окружения, если это необходимо (например, при локальном тестировании):
+```shell
+nano ./theater-async-api/tests/functional/.env.tests
+```
+
+3. Запуск функциональных тестов
+
+- через docker-compose с запуском и остановкой вспомогательных сервисов: 
+```shell
+make run-functional-tests
+```
+
+- через виртуальное окружение (предварительно запустите вспомогательные сервисы):
+```shell
+virtualenv --python=python3.12 theater-async-api/tests/functional/.venv
+```
+
+```shell
+source theater-async-api/tests/functional/.venv/bin/activate
+```
+
+```shell
+pip install -r theater-async-api/tests/functional/requirements.txt
+```
+
+```shell
+pytest theater-async-api/tests/functional/src
+```
+
