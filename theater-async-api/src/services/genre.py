@@ -2,21 +2,20 @@ import logging
 from functools import lru_cache
 from uuid import UUID
 
-from elasticsearch import AsyncElasticsearch, NotFoundError
-from fastapi import Depends
-from redis.asyncio import Redis
-
 from core.config import settings
 from db.elastic import EsIndexes, get_elastic
 from db.redis import get_redis
+from elasticsearch import AsyncElasticsearch, NotFoundError
+from fastapi import Depends
 from models import FilmShort
 from models.genre import Genre
-from services.base import BaseCacheService
+from redis.asyncio import Redis
+from services.base import BaseService
 
 logger = logging.getLogger(__name__)
 
 
-class GenreService(BaseCacheService):
+class GenreService(BaseService):
     async def get_all_genres(self, page_size: int, page_number: int) -> list[Genre]:
         genres = await self.get_data_from_cache(
             Genre, page_size=page_size, page_number=page_number
@@ -117,8 +116,8 @@ def get_genre_service(
     elastic: AsyncElasticsearch = Depends(get_elastic),
 ) -> GenreService:
     return GenreService(
-        redis,
-        elastic,
-        EsIndexes.genres.value,
-        settings.person_cache_expire_in_seconds,
+        cache_service=redis,
+        elastic=elastic,
+        index_name=EsIndexes.genres.value,
+        cache_expire=settings.person_cache_expire_in_seconds,
     )

@@ -1,17 +1,16 @@
 from dataclasses import dataclass
 from functools import lru_cache
 
-from elasticsearch import AsyncElasticsearch
-from fastapi import Depends
-from pydantic import BaseModel
-from redis.asyncio import Redis
-
 from core.config import settings
 from db.elastic import EsIndexes, get_elastic
 from db.redis import get_redis
+from elasticsearch import AsyncElasticsearch
+from fastapi import Depends
 from models import FilmShort, Genre, Person
-from models.search import SearchResponse, FilmSearch, PersonSearch, GenreSearch
-from services.base import BaseCacheService
+from models.search import FilmSearch, GenreSearch, PersonSearch, SearchResponse
+from pydantic import BaseModel
+from redis.asyncio import Redis
+from services.base import BaseService
 
 
 @dataclass
@@ -36,7 +35,7 @@ INDEX_SEARCH_FIELDS: dict[str, IndexMetaData] = {
 }
 
 
-class SearchService(BaseCacheService):
+class SearchService(BaseService):
     async def search(
         self,
         query_string: str,
@@ -94,9 +93,9 @@ def get_films_search_service(
     elastic: AsyncElasticsearch = Depends(get_elastic),
 ) -> SearchService:
     return SearchService(
-        redis,
-        elastic,
-        EsIndexes.movies.value,
+        cache_service=redis,
+        elastic=elastic,
+        index_name=EsIndexes.movies.value,
         cache_expire=settings.film_cache_expire_in_seconds,
     )
 
@@ -107,9 +106,9 @@ def get_genres_search_service(
     elastic: AsyncElasticsearch = Depends(get_elastic),
 ) -> SearchService:
     return SearchService(
-        redis,
-        elastic,
-        EsIndexes.genres.value,
+        cache_service=redis,
+        elastic=elastic,
+        index_name=EsIndexes.genres.value,
         cache_expire=settings.genre_cache_expire_in_seconds,
     )
 
@@ -120,8 +119,8 @@ def get_persons_search_service(
     elastic: AsyncElasticsearch = Depends(get_elastic),
 ) -> SearchService:
     return SearchService(
-        redis,
-        elastic,
-        EsIndexes.persons.value,
+        cache_service=redis,
+        elastic=elastic,
+        index_name=EsIndexes.persons.value,
         cache_expire=settings.person_cache_expire_in_seconds,
     )

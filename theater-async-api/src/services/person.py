@@ -2,21 +2,20 @@ import logging
 from functools import lru_cache
 from uuid import UUID
 
-from elasticsearch import AsyncElasticsearch, NotFoundError
-from fastapi import Depends
-from redis.asyncio import Redis
-
 from core.config import settings
 from db.elastic import EsIndexes, get_elastic
 from db.redis import get_redis
+from elasticsearch import AsyncElasticsearch, NotFoundError
+from fastapi import Depends
 from models.film import FilmShort
 from models.person import Person
-from services.base import BaseCacheService
+from redis.asyncio import Redis
+from services.base import BaseService
 
 logger = logging.getLogger(__name__)
 
 
-class PersonService(BaseCacheService):
+class PersonService(BaseService):
     async def get_all_persons(self, page_size: int, page_number: int) -> list[Person]:
         persons = await self.get_data_from_cache(
             Person, page_size=page_size, page_number=page_number
@@ -136,8 +135,8 @@ def get_person_service(
     elastic: AsyncElasticsearch = Depends(get_elastic),
 ) -> PersonService:
     return PersonService(
-        redis,
-        elastic,
-        EsIndexes.persons.value,
-        settings.genre_cache_expire_in_seconds,
+        cache_service=redis,
+        elastic=elastic,
+        index_name=EsIndexes.persons.value,
+        cache_expire=settings.genre_cache_expire_in_seconds,
     )

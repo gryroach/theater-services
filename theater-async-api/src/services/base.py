@@ -1,5 +1,5 @@
 import json
-from typing import Any, TypeVar, Protocol
+from typing import Any, Protocol, TypeVar
 
 from elasticsearch import AsyncElasticsearch
 from pydantic import BaseModel
@@ -8,7 +8,7 @@ from pydantic.json import pydantic_encoder
 T = TypeVar("T", bound=BaseModel)
 
 
-class CacheService(Protocol):
+class CacheServiceInterface(Protocol):
     async def set(self, key: str, value: Any, expire: int) -> None:
         pass
 
@@ -16,28 +16,28 @@ class CacheService(Protocol):
         pass
 
 
-class BaseCacheService:
+class CacheServiceMixin:
     def __init__(
         self,
-        cache_service: CacheService,
-        elastic: AsyncElasticsearch,
-        index_name: str,
+        cache_service: CacheServiceInterface,
+        key_prefix: str = "",
         cache_expire: int = 60,
-    ):
+        *args: Any,
+        **kwargs: Any,
+    ) -> None:
         self.cache_service = cache_service
-        self.elastic = elastic
-        self.index_name = index_name
+        self.key_prefix = key_prefix
         self.cache_expire = cache_expire
 
     async def put_into_cache(self, data: T | list[T], /, **kwargs: Any):
         value = json.dumps(data, default=pydantic_encoder)
-        key = self._generate_key(self.index_name, **kwargs)
+        key = self._generate_key(self.key_prefix, **kwargs)
         await self.cache_service.set(key, value, self.cache_expire)
 
     async def get_data_from_cache(
         self, model: type[BaseModel], single: bool = False, /, **kwargs: Any
     ) -> T | list[T] | None:
-        key = self._generate_key(self.index_name, **kwargs)
+        key = self._generate_key(self.key_prefix, **kwargs)
 
         data = await self.cache_service.get(key)
         if not data:
@@ -50,8 +50,27 @@ class BaseCacheService:
         return [model.model_validate(d) for d in data]
 
     @staticmethod
-    def _generate_key(index_name: str, /, **kwargs: Any) -> str:
-        parts = [index_name]
+    def _generate_key(key_prefix: str, /, **kwargs: Any) -> str:
+        parts = [key_prefix]
         for key, value in kwargs.items():
             parts.append(f"{key}_{value}")
         return "_".join(parts)
+
+
+class ElasticServiceMixin:
+    def __init__(
+        self,
+        elastic: AsyncElasticsearch,
+        index_name: str,
+        *args: Any,
+        **kwargs: Any,
+    ) -> None:
+        self.elastic = elastic
+        self.index_name = index_name
+
+
+class BaseService(CacheServiceMixin, ElasticServiceMixin):
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        CacheServiceMixin.__init__(self, *args, **kwargs)
+        ElasticServiceMixin.__init__(self, *args, **kwargs)
+        self.key_prefix = self.index_name
