@@ -38,7 +38,6 @@ class CacheServiceMixin:
         self, model: type[BaseModel], single: bool = False, /, **kwargs: Any
     ) -> T | list[T] | None:
         key = self._generate_key(self.key_prefix, **kwargs)
-
         data = await self.cache_service.get(key)
         if not data:
             return None

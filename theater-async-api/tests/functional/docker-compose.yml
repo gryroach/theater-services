@@ -51,6 +51,7 @@ services:
   redis:
     image: redis:7.4.1-alpine
     container_name: tests_redis
+    hostname: redis
     restart: always
     ports:
       - "6399:6379"

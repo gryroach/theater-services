@@ -3,7 +3,9 @@ from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from .testdata.index_mappings import (
-    genres_schema, movies_schema, persons_schema
+    genres_schema,
+    movies_schema,
+    persons_schema,
 )
 
 DOTENV_PATH = find_dotenv(".env.tests")
