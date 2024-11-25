@@ -11,6 +11,7 @@ from models.search import FilmSearch, GenreSearch, PersonSearch, SearchResponse
 from pydantic import BaseModel
 from redis.asyncio import Redis
 from services.base import BaseService
+from services.repositories.search import SearchElasticRepository
 
 
 @dataclass
@@ -44,13 +45,13 @@ class SearchService(BaseService):
     ) -> FilmSearch | PersonSearch | GenreSearch:
         result = await self.get_data_from_cache(
             SearchResponse,
-            single=True,
+            True,
             query_string=query_string,
             page_size=page_size,
             page_number=page_number,
         )
         if not result:
-            result = await self._get_search_result(
+            result = await self.repository.get_search_result(
                 query_string=query_string,
                 page_size=page_size,
                 page_number=page_number,
@@ -63,39 +64,19 @@ class SearchService(BaseService):
             )
         return result
 
-    async def _get_search_result(
-        self,
-        query_string: str,
-        page_size: int,
-        page_number: int,
-    ) -> FilmSearch | PersonSearch | GenreSearch:
-        fields = INDEX_SEARCH_FIELDS[self.index_name].search_fields
-        response_type = INDEX_SEARCH_FIELDS[self.index_name].response_type
-        query = {"multi_match": {"query": query_string, "fields": fields}}
-        body = {
-            "query": query,
-            "from": (page_number - 1) * page_size,
-            "size": page_size,
-        }
-        es_result = await self.elastic.search(index=self.index_name, body=body)
-        return SearchResponse(  # type: ignore
-            count=es_result["hits"]["total"]["value"],
-            result=[
-                response_type(**hit["_source"])
-                for hit in es_result["hits"]["hits"]
-            ],
-        )
-
 
 @lru_cache()
 def get_films_search_service(
     redis: Redis = Depends(get_redis),
     elastic: AsyncElasticsearch = Depends(get_elastic),
 ) -> SearchService:
+    repository = SearchElasticRepository[FilmSearch](
+        EsIndexes.movies.value, elastic
+    )
     return SearchService(
+        repository=repository,
         cache_service=redis,
-        elastic=elastic,
-        index_name=EsIndexes.movies.value,
+        key_prefix=EsIndexes.movies.value,
         cache_expire=settings.film_cache_expire_in_seconds,
     )
 
@@ -105,10 +86,13 @@ def get_genres_search_service(
     redis: Redis = Depends(get_redis),
     elastic: AsyncElasticsearch = Depends(get_elastic),
 ) -> SearchService:
+    repository = SearchElasticRepository[GenreSearch](
+        EsIndexes.genres.value, elastic
+    )
     return SearchService(
+        repository=repository,
         cache_service=redis,
-        elastic=elastic,
-        index_name=EsIndexes.genres.value,
+        key_prefix=EsIndexes.genres.value,
         cache_expire=settings.genre_cache_expire_in_seconds,
     )
 
@@ -118,9 +102,12 @@ def get_persons_search_service(
     redis: Redis = Depends(get_redis),
     elastic: AsyncElasticsearch = Depends(get_elastic),
 ) -> SearchService:
+    repository = SearchElasticRepository[PersonSearch](
+        EsIndexes.persons.value, elastic
+    )
     return SearchService(
+        repository=repository,
         cache_service=redis,
-        elastic=elastic,
-        index_name=EsIndexes.persons.value,
+        key_prefix=EsIndexes.persons.value,
         cache_expire=settings.person_cache_expire_in_seconds,
     )

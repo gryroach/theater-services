@@ -1,15 +1,18 @@
 import json
 from typing import Any, Protocol, TypeVar
 
-from elasticsearch import AsyncElasticsearch
 from pydantic import BaseModel
 from pydantic.json import pydantic_encoder
+
+from services.repositories import RepositoryType
 
 T = TypeVar("T", bound=BaseModel)
 
 
 class CacheServiceInterface(Protocol):
-    async def set(self, key: str, value: Any, expire: int) -> None:
+    async def set(  # noqa: A003
+            self, key: str, value: Any, expire: int
+    ) -> None:
         pass
 
     async def get(self, key: str) -> Any:
@@ -60,12 +63,9 @@ class CacheServiceMixin:
 class BaseService(CacheServiceMixin):
     def __init__(
         self,
-        elastic: AsyncElasticsearch,
-        index_name: str,
+        repository: RepositoryType,
         *args: Any,
         **kwargs: Any,
     ) -> None:
-        self.elastic = elastic
-        self.index_name = index_name
+        self.repository = repository
         super().__init__(*args, **kwargs)
-        self.key_prefix = self.index_name
