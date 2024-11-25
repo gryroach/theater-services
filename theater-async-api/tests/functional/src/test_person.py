@@ -112,10 +112,25 @@ async def test_person_films(
                 {"id": "4c1d0404-075e-4027-b4ae-01d5d4a10a9b"},
             ],
         ),
+        (
+            "/api/v1/persons/",
+            {"page_size": 3, "page_number": 2},
+            200,
+            [
+                {"id": "b45bd7bc-2e16-46d5-b125-983d356768c6"},
+                {"id": "4c1d0404-075e-4027-b4ae-01d5d4a10a9b"},
+            ],
+        ),
+        (
+            "/api/v1/persons/",
+            {"page_size": 10, "page_number": 5},
+            200,
+            [],
+        ),
     ],
 )
 @pytest.mark.asyncio(loop_scope="session")
-async def test_all_persons(
+async def test_person_pagination(
     es_write_data: Any,
     es_persons_data: list[dict],
     make_get_request: Any,

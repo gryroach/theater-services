@@ -83,7 +83,7 @@ def clear_redis(redis_client: Redis):
 @pytest_asyncio.fixture(name="clear_es_indices")
 def clear_es_indices(es_client: AsyncElasticsearch):
     """
-    Удаляет все индексы в Elasticsearch.
+    Удаляет указанный индекс в Elasticsearch.
     """
 
     async def inner(

@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class FilmRole(BaseModel):
@@ -13,4 +13,4 @@ class FilmRole(BaseModel):
 class Person(BaseModel):
     id: UUID
     full_name: str
-    films: list[FilmRole] | None = None
+    films: list[FilmRole] = Field(default_factory=list)

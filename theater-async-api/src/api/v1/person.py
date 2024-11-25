@@ -27,7 +27,7 @@ async def get_persons(
     person_service: PersonService = Depends(get_person_service),
 ):
     persons = await person_service.get_all_persons(page_size, page_number)
-    return [Person(**dict(person)) for person in persons]
+    return persons
 
 
 @router.get("/{uuid}", response_model=Person)

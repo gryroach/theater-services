@@ -74,7 +74,7 @@ async def test_valid_genre_uuid(
     [
         (
             "/api/v1/genres/",
-            {},
+            {"page_size": 2, "page_number": 1},
             200,
             [
                 {
@@ -87,10 +87,27 @@ async def test_valid_genre_uuid(
                 },
             ],
         ),
+        (
+            "/api/v1/genres/",
+            {"page_size": 1, "page_number": 2},
+            200,
+            [
+                {
+                    "id": "fb111f22-121e-44a7-b78f-b19191810100",
+                    "name": "Sci-Fi",
+                },
+            ],
+        ),
+        (
+            "/api/v1/genres/",
+            {"page_size": 50, "page_number": 100},
+            200,
+            [],
+        ),
     ],
 )
 @pytest.mark.asyncio(loop_scope="session")
-async def test_all_genres(
+async def test_genres_pagination(
     es_write_data: Any,
     es_genres_data: list[dict],
     make_get_request: Any,
