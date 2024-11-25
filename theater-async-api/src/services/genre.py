@@ -16,12 +16,16 @@ logger = logging.getLogger(__name__)
 
 
 class GenreService(BaseService):
-    async def get_all_genres(self, page_size: int, page_number: int) -> list[Genre]:
+    async def get_all_genres(
+        self, page_size: int, page_number: int
+    ) -> list[Genre]:
         genres = await self.get_data_from_cache(
             Genre, page_size=page_size, page_number=page_number
         )
         if not genres:
-            genres = await self._get_all_genres_from_elastic(page_size, page_number)
+            genres = await self._get_all_genres_from_elastic(
+                page_size, page_number
+            )
             if genres:
                 await self.put_into_cache(
                     genres, page_size=page_size, page_number=page_number
@@ -67,15 +71,23 @@ class GenreService(BaseService):
             "size": page_size,
         }
         try:
-            es_result = await self.elastic.search(index=self.index_name, body=body)
-            return [Genre(**hit["_source"]) for hit in es_result["hits"]["hits"]]
+            es_result = await self.elastic.search(
+                index=self.index_name, body=body
+            )
+            return [
+                Genre(**hit["_source"]) for hit in es_result["hits"]["hits"]
+            ]
         except Exception as e:
             logger.exception(f"Error retrieving all genres: {e}")
             return []
 
-    async def _get_genre_by_id_from_elastic(self, genre_id: UUID) -> Genre | None:
+    async def _get_genre_by_id_from_elastic(
+        self, genre_id: UUID
+    ) -> Genre | None:
         try:
-            es_result = await self.elastic.get(index=self.index_name, id=str(genre_id))
+            es_result = await self.elastic.get(
+                index=self.index_name, id=str(genre_id)
+            )
             return Genre(**es_result["_source"]) if es_result else None
         except NotFoundError:
             logger.warning(f"Genre with ID {genre_id} not found")
@@ -102,7 +114,9 @@ class GenreService(BaseService):
             response = await self.elastic.search(
                 index=EsIndexes.movies.value, body=body
             )
-            return [FilmShort(**hit["_source"]) for hit in response["hits"]["hits"]]
+            return [
+                FilmShort(**hit["_source"]) for hit in response["hits"]["hits"]
+            ]
         except Exception as e:
             logger.exception(
                 f"Error retrieving popular films for genre {genre_id}: {e}"
