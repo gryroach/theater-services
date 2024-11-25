@@ -291,6 +291,11 @@ def es_genres_data() -> list[dict]:
         },
     ]
 
+@pytest.fixture
+def film_id() -> str:
+    return UUIDS[0]
+
+
 
 def prepare_data_for_es(in_data: list[dict], index_name: str) -> list[dict]:
     """
