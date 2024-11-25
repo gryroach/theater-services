@@ -1,7 +1,6 @@
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-
 from models import FilmShort, Genre
 from models.search import GenreSearch
 from services.genre import GenreService, get_genre_service
@@ -28,10 +27,6 @@ async def get_genres(
     genre_service: GenreService = Depends(get_genre_service),
 ):
     genres = await genre_service.get_all_genres(page_size, page_number)
-    if not genres:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Genres not found"
-        )
     return genres
 
 

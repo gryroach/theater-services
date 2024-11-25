@@ -1,7 +1,6 @@
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-
 from models import FilmShort, Person
 from models.search import PersonSearch
 from services.person import PersonService, get_person_service
@@ -28,10 +27,6 @@ async def get_persons(
     person_service: PersonService = Depends(get_person_service),
 ):
     persons = await person_service.get_all_persons(page_size, page_number)
-    if not persons:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Persons not found"
-        )
     return persons
 
 

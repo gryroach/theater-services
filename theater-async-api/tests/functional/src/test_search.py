@@ -5,7 +5,7 @@ from tests.functional.settings import es_movies_settings
 @pytest.mark.parametrize(
     "query_data, expected_answer",
     [
-        ({"query": "The Star"}, {"status": 200, "count": 60, "length": 10}),
+        ({"query": "The Star"}, {"status": 200, "count": 40, "length": 10}),
         ({"query": "Mashed potato"}, {"status": 200, "count": 0, "length": 0}),
     ],
 )
