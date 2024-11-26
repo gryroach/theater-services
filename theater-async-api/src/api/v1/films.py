@@ -1,7 +1,6 @@
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-
 from models import Film, FilmShort, FilmsSortOptions
 from models.search import FilmSearch
 from services.film import FilmService, get_film_service

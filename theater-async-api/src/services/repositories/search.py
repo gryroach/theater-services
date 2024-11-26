@@ -1,5 +1,15 @@
+import logging
 from dataclasses import dataclass
 from typing import Generic, Protocol, TypeVar
+from uuid import UUID
+
+from elasticsearch import AsyncElasticsearch, NotFoundError
+from models import Film, FilmShort, Genre, Person
+from pydantic import ValidationError
+
+logger = logging.getLogger(__name__)
+T = TypeVar("T", bound=FilmShort | Film | Genre | Person)
+V = TypeVar("V", bound=FilmShort | Film | Genre | Person)
 
 from db.elastic import EsIndexes
 from elasticsearch import AsyncElasticsearch
@@ -38,8 +48,7 @@ class SearchRepositoryProtocol(Protocol[T]):
         query_string: str,
         page_size: int,
         page_number: int,
-    ) -> SearchResponse[T]:
-        ...
+    ) -> SearchResponse[T]: ...
 
 
 class SearchElasticRepository(Generic[T]):
@@ -66,11 +75,20 @@ class SearchElasticRepository(Generic[T]):
             "from": (page_number - 1) * page_size,
             "size": page_size,
         }
-        es_result = await self.elastic.search(index=self.index_name, body=body)
-        return SearchResponse[T](
-            count=es_result["hits"]["total"]["value"],
-            result=[
+        try:
+            es_result = await self.elastic.search(
+                index=self.index_name, body=body
+            )
+            count = es_result["hits"]["total"]["value"]
+            result = [
                 response_type(**hit["_source"])
                 for hit in es_result["hits"]["hits"]
-            ],
+            ]
+        except NotFoundError as e:
+            logger.error(f"Индекс не найден: {self.index_name}. Ошибка: {e}")
+            count = 0
+            result = []
+        return SearchResponse[T](
+            count=count,
+            result=result,
         )
