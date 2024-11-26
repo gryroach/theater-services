@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from functools import lru_cache
+from typing import TypeVar
 
 from core.config import settings
 from db.elastic import EsIndexes, get_elastic
@@ -7,11 +8,13 @@ from db.redis import get_redis
 from elasticsearch import AsyncElasticsearch
 from fastapi import Depends
 from models import FilmShort, Genre, Person
-from models.search import FilmSearch, GenreSearch, PersonSearch, SearchResponse
+from models.search import SearchResponse
 from pydantic import BaseModel
 from redis.asyncio import Redis
 from services.base import BaseService
 from services.repositories.search import SearchElasticRepository
+
+T = TypeVar("T", bound=FilmShort | Genre | Person)
 
 
 @dataclass
@@ -42,7 +45,7 @@ class SearchService(BaseService):
         query_string: str,
         page_size: int,
         page_number: int,
-    ) -> FilmSearch | PersonSearch | GenreSearch:
+    ) -> SearchResponse[T]:
         result = await self.get_data_from_cache(
             SearchResponse,
             True,
@@ -70,7 +73,7 @@ def get_films_search_service(
     redis: Redis = Depends(get_redis),
     elastic: AsyncElasticsearch = Depends(get_elastic),
 ) -> SearchService:
-    repository = SearchElasticRepository[FilmSearch](
+    repository = SearchElasticRepository[FilmShort](
         EsIndexes.movies.value, elastic
     )
     return SearchService(
@@ -86,7 +89,7 @@ def get_genres_search_service(
     redis: Redis = Depends(get_redis),
     elastic: AsyncElasticsearch = Depends(get_elastic),
 ) -> SearchService:
-    repository = SearchElasticRepository[GenreSearch](
+    repository = SearchElasticRepository[Genre](
         EsIndexes.genres.value, elastic
     )
     return SearchService(
@@ -102,7 +105,7 @@ def get_persons_search_service(
     redis: Redis = Depends(get_redis),
     elastic: AsyncElasticsearch = Depends(get_elastic),
 ) -> SearchService:
-    repository = SearchElasticRepository[PersonSearch](
+    repository = SearchElasticRepository[Person](
         EsIndexes.persons.value, elastic
     )
     return SearchService(

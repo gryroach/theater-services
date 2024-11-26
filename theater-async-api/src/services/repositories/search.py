@@ -4,10 +4,10 @@ from typing import Generic, Protocol, TypeVar
 from db.elastic import EsIndexes
 from elasticsearch import AsyncElasticsearch
 from models import FilmShort, Genre, Person
-from models.search import SearchResponse, FilmSearch, GenreSearch, PersonSearch
+from models.search import SearchResponse
 from pydantic import BaseModel
 
-T = TypeVar("T", bound=FilmSearch | GenreSearch | PersonSearch)
+T = TypeVar("T", bound=FilmShort | Genre | Person)
 
 
 @dataclass
@@ -38,7 +38,7 @@ class SearchRepositoryProtocol(Protocol[T]):
         query_string: str,
         page_size: int,
         page_number: int,
-    ) -> T:
+    ) -> SearchResponse[T]:
         ...
 
 
@@ -56,7 +56,7 @@ class SearchElasticRepository(Generic[T]):
         query_string: str,
         page_size: int,
         page_number: int,
-    ) -> T:
+    ) -> SearchResponse[T]:
         fields = INDEX_SEARCH_FIELDS[self.index_name].search_fields
         response_type = INDEX_SEARCH_FIELDS[self.index_name].response_type
 
@@ -67,7 +67,7 @@ class SearchElasticRepository(Generic[T]):
             "size": page_size,
         }
         es_result = await self.elastic.search(index=self.index_name, body=body)
-        return SearchResponse(  # type: ignore
+        return SearchResponse[T](
             count=es_result["hits"]["total"]["value"],
             result=[
                 response_type(**hit["_source"])
