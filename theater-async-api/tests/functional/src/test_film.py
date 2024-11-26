@@ -14,12 +14,13 @@ async def test_film_success(
     make_get_request,
     es_movies_data: list[dict],
     film_id,
+    imdb_rating,
 ) -> None:
     await es_write_data(es_movies_data, es_movies_settings.es_index)
     expected_body = {
         "id": film_id,
         "title": "The Star",
-        "imdb_rating": 8.5,
+        "imdb_rating": imdb_rating(film_id),
         "description": "New World",
         "genres": [
             "Action",
@@ -53,21 +54,15 @@ async def test_films(
     es_write_data,
     make_get_request,
     es_movies_data: list[dict],
-    film_id,
+    expected_body,
 ) -> None:
     await es_write_data(es_movies_data, es_movies_settings.es_index)
-    expected_body = {
-        'id': film_id,
-        'title': 'The Star',
-        'imdb_rating': 8.5
-    }
 
     url = f"/api/v1/films/"
     status, body = await make_get_request(url)
 
     assert status == HTTPStatus.OK
-    assert len(body) == LENGTH
-    assert body[0] == expected_body
+    assert body == expected_body[:LENGTH]
 
 
 @pytest.mark.asyncio(loop_scope="session")
@@ -75,6 +70,7 @@ async def test_films_pagination(
     es_write_data,
     make_get_request,
     es_movies_data: list[dict],
+    expected_body,
 ) -> None:
     await es_write_data(es_movies_data, es_movies_settings.es_index)
 
@@ -82,7 +78,7 @@ async def test_films_pagination(
     status, body = await make_get_request(url)
 
     assert status == HTTPStatus.OK
-    assert len(body) == PAGE_SIZE
+    assert body == expected_body[:PAGE_SIZE]
 
 
 @pytest.mark.parametrize(
@@ -108,9 +104,15 @@ async def test_sort_films(
     assert ratings == sorted(ratings, reverse=reverse)
 
 @pytest.mark.parametrize(
-    "genre, expected_status", [
-        ({"genre": "fb111f22-121e-44a7-b78f-b19191810100"}, HTTPStatus.OK),
-        ({"genre": "unknown"}, HTTPStatus.UNPROCESSABLE_ENTITY)
+    "genre, expected_answer", [
+        (
+            {"genre": "fb111f22-121e-44a7-b78f-b19191810100"},
+            {"status": HTTPStatus.OK, "length": LENGTH}
+        ),
+        (
+            {"genre": "fb111f22-121e-44a7-b78f-b19191810111"},
+            {"status": HTTPStatus.OK, "length": 0}
+        ),
     ]
 )
 @pytest.mark.asyncio(loop_scope="session")
@@ -119,13 +121,17 @@ async def test_films_by_genre(
     make_get_request,
     es_movies_data: list[dict],
     genre,
-    expected_status,
+    expected_answer,
 ) -> None:
     await es_write_data(es_movies_data, es_movies_settings.es_index)
 
     url = "/api/v1/films/"
     status, body = await make_get_request(url, genre)
 
-    assert status == expected_status
-    if expected_status == HTTPStatus.OK:
-        assert len(body) == LENGTH
+    assert status == expected_answer["status"]
+    assert len(body) == expected_answer["length"]
+
+    for film in body:
+        url = f"/api/v1/films/{film['id']}"
+        status, movie = await make_get_request(url)
+        assert "Sci-Fi" in movie["genres"]

@@ -156,7 +156,23 @@ def generate_uuids(seed: int = 42, count: int = 40) -> list[str]:
     return [str(uuid.UUID(int=random.getrandbits(128))) for _ in range(count)]
 
 
+def generate_ratings_for_films(uuids: list[str]) -> dict[str, float]:
+    """
+    Генерирует рейтинг для каждого фильма по его UUID.
+
+    Args:
+        uuids (list[str]): Список UUID.
+
+    Returns:
+        dict[str, float]: Словарь, где ключами являются UUID фильмов,
+        а значениями — случайно сгенерированные рейтинги
+        в диапазоне от 1.0 до 10.0 с шагом 0.1.
+    """
+    return {uuid: random.randint(10, 100) / 10 for uuid in uuids}
+
+
 UUIDS = generate_uuids()
+MOVIES_RATINGS = generate_ratings_for_films(uuids=UUIDS)
 
 
 @pytest.fixture
@@ -167,7 +183,7 @@ def es_movies_data() -> list[dict]:
     return [
         {
             "id": uuid,
-            "imdb_rating": 8.5,
+            "imdb_rating": rating,
             "genres": ["Action", "Sci-Fi"],
             "genres_details": [
                 {
@@ -199,7 +215,7 @@ def es_movies_data() -> list[dict]:
                 {"id": "4c1d0404-075e-4027-b4ae-01d5d4a10a9b", "name": "Stan"}
             ],
         }
-        for uuid in UUIDS
+        for uuid, rating in MOVIES_RATINGS.items()
     ]
 
 
@@ -291,11 +307,31 @@ def es_genres_data() -> list[dict]:
         },
     ]
 
+
 @pytest.fixture
 def film_id() -> str:
     return UUIDS[0]
 
 
+@pytest.fixture
+def imdb_rating():
+    def inner(movie_id: str):
+        return MOVIES_RATINGS[movie_id]
+
+    return inner
+@pytest.fixture
+def expected_body():
+    sorted_movies = sorted(
+        MOVIES_RATINGS.items(), key=lambda x: x[1], reverse=True
+    )
+    return [
+        {
+            'id': movie_id,
+            'title': 'The Star',
+            'imdb_rating': rating
+        }
+        for movie_id, rating in sorted_movies
+    ]
 
 def prepare_data_for_es(in_data: list[dict], index_name: str) -> list[dict]:
     """
