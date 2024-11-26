@@ -1,5 +1,6 @@
 import uuid
 from http import HTTPStatus
+from typing import Any
 
 import pytest
 from tests.functional.settings import es_movies_settings
@@ -10,11 +11,11 @@ LENGTH = 10
 
 @pytest.mark.asyncio(loop_scope="session")
 async def test_film_success(
-    es_write_data,
-    make_get_request,
+    es_write_data: Any,
+    make_get_request: Any,
     es_movies_data: list[dict],
-    film_id,
-    imdb_rating,
+    film_id: str,
+    imdb_rating: Any,
 ) -> None:
     await es_write_data(es_movies_data, es_movies_settings.es_index)
     expected_body = {
@@ -54,7 +55,7 @@ async def test_films(
     es_write_data,
     make_get_request,
     es_movies_data: list[dict],
-    expected_body,
+    expected_body: list[dict],
 ) -> None:
     await es_write_data(es_movies_data, es_movies_settings.es_index)
 
@@ -70,7 +71,7 @@ async def test_films_pagination(
     es_write_data,
     make_get_request,
     es_movies_data: list[dict],
-    expected_body,
+    expected_body: list[dict],
 ) -> None:
     await es_write_data(es_movies_data, es_movies_settings.es_index)
 
@@ -89,8 +90,8 @@ async def test_films_pagination(
 )
 @pytest.mark.asyncio(loop_scope="session")
 async def test_sort_films(
-    es_write_data,
-    make_get_request,
+    es_write_data: Any,
+    make_get_request: Any,
     es_movies_data: list[dict],
     url: str,
     reverse: bool,
@@ -117,11 +118,11 @@ async def test_sort_films(
 )
 @pytest.mark.asyncio(loop_scope="session")
 async def test_films_by_genre(
-    es_write_data,
-    make_get_request,
+    es_write_data: Any,
+    make_get_request: Any,
     es_movies_data: list[dict],
-    genre,
-    expected_answer,
+    genre: dict[str, str],
+    expected_answer: dict[str, int],
 ) -> None:
     await es_write_data(es_movies_data, es_movies_settings.es_index)
 
@@ -135,3 +136,33 @@ async def test_films_by_genre(
         url = f"/api/v1/films/{film['id']}"
         status, movie = await make_get_request(url)
         assert "Sci-Fi" in movie["genres"]
+
+
+@pytest.mark.asyncio(loop_scope="session")
+async def test_films_cache(
+    es_write_data: Any,
+    make_get_request,
+    es_movies_data: list[dict],
+    clear_redis: Any,
+    clear_es_indices: Any,
+    expected_body: list[dict],
+) -> None:
+    await es_write_data(es_movies_data, es_movies_settings.es_index)
+
+    url = f"/api/v1/films/?page_size=50"
+    status, body = await make_get_request(url)
+
+    assert status == HTTPStatus.OK
+    assert body == expected_body
+
+    await clear_es_indices(es_movies_settings.es_index)
+
+    status, body = await make_get_request(url)
+
+    assert status == HTTPStatus.OK
+    assert body == expected_body
+
+    await clear_redis()
+
+    status, body = await make_get_request(url)
+    assert status == HTTPStatus.NOT_FOUND
