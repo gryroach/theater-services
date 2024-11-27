@@ -67,6 +67,14 @@ async def redis_client() -> Redis:
     yield client
     await client.aclose()
 
+@pytest.fixture
+async def clear_cache(redis_client: Redis):
+    """
+    Очищает Redis по завершению теста.
+    """
+    yield
+    await redis_client.flushall()
+
 
 @pytest_asyncio.fixture(name="clear_redis")
 def clear_redis(redis_client: Redis):
@@ -319,6 +327,8 @@ def imdb_rating():
         return MOVIES_RATINGS[movie_id]
 
     return inner
+
+
 @pytest.fixture
 def expected_body():
     sorted_movies = sorted(
@@ -332,6 +342,21 @@ def expected_body():
         }
         for movie_id, rating in sorted_movies
     ]
+
+
+@pytest.fixture
+def search_expected_body():
+    result = [
+        {
+            'id': movie_id,
+            'title': 'The Star',
+            'imdb_rating': rating
+        }
+        for movie_id, rating in MOVIES_RATINGS.items()
+    ]
+    count = len(MOVIES_RATINGS)
+    return {"count": count, "result": result[:10]}
+
 
 def prepare_data_for_es(in_data: list[dict], index_name: str) -> list[dict]:
     """

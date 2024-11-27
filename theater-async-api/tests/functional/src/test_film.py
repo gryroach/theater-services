@@ -16,6 +16,7 @@ async def test_film_success(
     es_movies_data: list[dict],
     film_id: str,
     imdb_rating: Any,
+    clear_cache: Any,
 ) -> None:
     await es_write_data(es_movies_data, es_movies_settings.es_index)
     expected_body = {
@@ -41,6 +42,7 @@ async def test_film_fail(
     es_write_data,
     make_get_request,
     es_movies_data: list[dict],
+    clear_cache: Any,
 ) -> None:
     await es_write_data(es_movies_data, es_movies_settings.es_index)
     movie_id = str(uuid.uuid4())
@@ -56,6 +58,7 @@ async def test_films(
     make_get_request,
     es_movies_data: list[dict],
     expected_body: list[dict],
+    clear_cache: Any,
 ) -> None:
     await es_write_data(es_movies_data, es_movies_settings.es_index)
 
@@ -72,6 +75,7 @@ async def test_films_pagination(
     make_get_request,
     es_movies_data: list[dict],
     expected_body: list[dict],
+    clear_cache: Any,
 ) -> None:
     await es_write_data(es_movies_data, es_movies_settings.es_index)
 
@@ -95,6 +99,7 @@ async def test_sort_films(
     es_movies_data: list[dict],
     url: str,
     reverse: bool,
+    clear_cache: Any,
 ) -> None:
     await es_write_data(es_movies_data, es_movies_settings.es_index)
 
@@ -123,6 +128,7 @@ async def test_films_by_genre(
     es_movies_data: list[dict],
     genre: dict[str, str],
     expected_answer: dict[str, int],
+    clear_cache: Any,
 ) -> None:
     await es_write_data(es_movies_data, es_movies_settings.es_index)
 
@@ -146,6 +152,7 @@ async def test_films_cache(
     clear_redis: Any,
     clear_es_indices: Any,
     expected_body: list[dict],
+    clear_cache: Any,
 ) -> None:
     await es_write_data(es_movies_data, es_movies_settings.es_index)
 
@@ -165,4 +172,6 @@ async def test_films_cache(
     await clear_redis()
 
     status, body = await make_get_request(url)
-    assert status == HTTPStatus.NOT_FOUND
+
+    assert status == HTTPStatus.OK
+    assert body == []

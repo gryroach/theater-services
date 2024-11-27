@@ -25,6 +25,7 @@ async def test_invalid_uuid(
     query_data: dict,
     expected_status: int,
     expected_body: dict,
+    clear_cache: Any,
 ) -> None:
     """
     Тестирует обработку некорректного UUID.
@@ -55,6 +56,7 @@ async def test_valid_uuid(
     query_data: dict,
     expected_status: int,
     expected_body: dict,
+    clear_cache: Any,
 ) -> None:
     """
     Тестирует обработку корректного UUID.
@@ -86,6 +88,7 @@ async def test_person_films(
     query_data: dict,
     expected_status: int,
     expected_body: list[dict],
+    clear_cache: Any,
 ) -> None:
     """
     Тестирует получение фильмов для персоны.
@@ -138,6 +141,7 @@ async def test_person_pagination(
     query_data: dict,
     expected_status: int,
     expected_body: list[dict],
+    clear_cache: Any,
 ) -> None:
     """
     Тестирует получение всех персон.
@@ -171,6 +175,7 @@ async def test_person_films_cache(
     query_data: dict,
     expected_status: int,
     expected_body: list[dict],
+    clear_cache: Any,
 ) -> None:
     """
     Тестирует получение данных с учётом кеша в Redis.
