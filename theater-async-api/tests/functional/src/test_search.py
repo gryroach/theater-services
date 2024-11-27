@@ -183,22 +183,12 @@ async def test_search_validation_and_limit(
 
 
 @pytest.mark.parametrize(
-    "url, query_data, expected_status, expected_body, empty_result_body",
+    "url, query_data, expected_status, empty_result_body",
     [
         (
             "/api/v1/films/search/",
-            {"query": "The Star", "page_size": 1},
+            {"query": "The Star"},
             200,
-            {
-                "count": 40,
-                "result": [
-                    {
-                        "id": "bdd640fb-0667-1ad1-1c80-317fa3b1799d",
-                        "title": "The Star",
-                        "imdb_rating": 8.5,
-                    }
-                ],
-            },
             {"count": 0, "result": []},
         ),
     ],
@@ -215,6 +205,7 @@ async def test_film_search_cache(
     expected_status: int,
     expected_body: list[dict],
     empty_result_body: list[dict],
+    search_expected_body: dict,
 ) -> None:
     """
     Тест поиска фильмов с использованием кеша в Redis.
@@ -224,13 +215,13 @@ async def test_film_search_cache(
     # Выполняем первый запрос, данные кэшируются
     status, body = await make_get_request(url, query_data)
     assert status == expected_status
-    assert body == expected_body
+    assert body == search_expected_body
     # Очищаем данные в Elasticsearch, но кэш не трогаем
     await clear_es_indices(es_movies_settings.es_index)
     # Выполняем запрос повторно, данные должны вернуться из кэша
     status, body_cached = await make_get_request(url, query_data)
     assert status == expected_status
-    assert body_cached == expected_body
+    assert body_cached == search_expected_body
     # Очищаем кэш
     await clear_redis()
     # Выполняем запрос, должно вернуться тело запроса с пустым списком
