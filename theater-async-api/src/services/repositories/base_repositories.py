@@ -13,16 +13,14 @@ V = TypeVar("V", bound=FilmShort | Film | Genre | Person)
 
 
 class BaseRepositoryProtocol(Protocol[T, V]):
-    async def get_by_id(self, id_: UUID) -> T | None:
-        ...
+    async def get_by_id(self, id_: UUID) -> T | None: ...
 
     async def get_all(
         self,
         page_size: int,
         page_number: int,
         sort: str | None = None,
-    ) -> list[V]:
-        ...
+    ) -> list[V]: ...
 
 
 class BaseElasticRepository(Generic[T, V]):
@@ -131,11 +129,12 @@ class BaseElasticRepository(Generic[T, V]):
                 ("desc", sort[1:]) if sort[0] == "-" else ("asc", sort)
             )
             body["sort"] = [{row: {"order": order}}]
-
-        docs = await self.elastic.search(index=index_name, body=body)
-
+        hits = []
         try:
-            return [model(**hit["_source"]) for hit in docs["hits"]["hits"]]
+            docs = await self.elastic.search(index=index_name, body=body)
+            hits = [model(**hit["_source"]) for hit in docs["hits"]["hits"]]
+        except NotFoundError as e:
+            logger.error(f"Индекс не найден: {index_name}. Ошибка: {e}")
         except ValidationError as e:
             logger.error(f"Ошибка создания {model.__name__}: {e}")
-            return []
+        return hits
