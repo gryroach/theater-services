@@ -59,13 +59,12 @@ class SearchService(BaseService):
                 page_size=page_size,
                 page_number=page_number,
             )
-            if result:
-                await self.put_into_cache(
-                    result,
-                    query_string=query_string,
-                    page_size=page_size,
-                    page_number=page_number,
-                )
+            await self.put_into_cache(
+                result,
+                query_string=query_string,
+                page_size=page_size,
+                page_number=page_number,
+            )
         return result
 
 

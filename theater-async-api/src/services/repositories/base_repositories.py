@@ -3,8 +3,9 @@ from typing import Generic, Protocol, TypeVar
 from uuid import UUID
 
 from elasticsearch import AsyncElasticsearch, NotFoundError
-from models import Film, FilmShort, Genre, Person
 from pydantic import ValidationError
+
+from models import Film, FilmShort, Genre, Person
 
 logger = logging.getLogger(__name__)
 T = TypeVar("T", bound=FilmShort | Film | Genre | Person)
@@ -128,13 +129,12 @@ class BaseElasticRepository(Generic[T, V]):
                 ("desc", sort[1:]) if sort[0] == "-" else ("asc", sort)
             )
             body["sort"] = [{row: {"order": order}}]
-
+        hits = []
         try:
             docs = await self.elastic.search(index=index_name, body=body)
-            return [model(**hit["_source"]) for hit in docs["hits"]["hits"]]
+            hits = [model(**hit["_source"]) for hit in docs["hits"]["hits"]]
         except NotFoundError as e:
             logger.error(f"Индекс не найден: {index_name}. Ошибка: {e}")
-            return []
         except ValidationError as e:
             logger.error(f"Ошибка создания {model.__name__}: {e}")
-            return []
+        return hits

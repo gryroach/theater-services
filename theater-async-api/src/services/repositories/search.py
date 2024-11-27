@@ -1,22 +1,14 @@
 import logging
 from dataclasses import dataclass
 from typing import Generic, Protocol, TypeVar
-from uuid import UUID
-
-from elasticsearch import AsyncElasticsearch, NotFoundError
-from models import Film, FilmShort, Genre, Person
-from pydantic import ValidationError
-
-logger = logging.getLogger(__name__)
-T = TypeVar("T", bound=FilmShort | Film | Genre | Person)
-V = TypeVar("V", bound=FilmShort | Film | Genre | Person)
 
 from db.elastic import EsIndexes
-from elasticsearch import AsyncElasticsearch
+from elasticsearch import AsyncElasticsearch, NotFoundError
 from models import FilmShort, Genre, Person
 from models.search import SearchResponse
 from pydantic import BaseModel
 
+logger = logging.getLogger(__name__)
 T = TypeVar("T", bound=FilmShort | Genre | Person)
 
 
