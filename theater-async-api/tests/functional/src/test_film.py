@@ -3,8 +3,7 @@ from http import HTTPStatus
 from typing import Any
 
 import pytest
-from tests.functional.settings import es_movies_settings
-
+from tests.functional.settings import es_movies_settings, es_genres_settings
 
 PAGE_SIZE = 20
 LENGTH = 10
@@ -121,10 +120,12 @@ async def test_films_by_genre(
     es_write_data: Any,
     make_get_request: Any,
     es_movies_data: list[dict],
+    es_genres_data: list[dict],
     genre: dict[str, str],
     expected_answer: dict[str, int],
 ) -> None:
     await es_write_data(es_movies_data, es_movies_settings.es_index)
+    await es_write_data(es_genres_data, es_genres_settings.es_index)
 
     url = "/api/v1/films/"
     status, body = await make_get_request(url, genre)
