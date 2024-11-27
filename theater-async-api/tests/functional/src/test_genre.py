@@ -25,7 +25,6 @@ async def test_invalid_genre_uuid(
     query_data: dict,
     expected_status: int,
     expected_body: dict,
-    clear_cache: Any,
 ) -> None:
     """
     Тестирует обработку некорректного UUID жанра.
@@ -60,7 +59,6 @@ async def test_valid_genre_uuid(
     query_data: dict,
     expected_status: int,
     expected_body: dict,
-    clear_cache: Any,
 ) -> None:
     """
     Тестирует обработку корректного UUID жанра.
@@ -117,7 +115,6 @@ async def test_genres_pagination(
     query_data: dict,
     expected_status: int,
     expected_body: list[dict],
-    clear_cache: Any,
 ) -> None:
     """
     Тестирует получение всех жанров.
@@ -151,7 +148,6 @@ async def test_genre_cache(
     query_data: dict,
     expected_status: int,
     expected_body: list[dict],
-    clear_cache: Any,
 ) -> None:
     """
     Тестирует получение данных жанра с учётом кеша в Redis.

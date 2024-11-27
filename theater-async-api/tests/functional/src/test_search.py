@@ -109,7 +109,6 @@ async def test_search_entities(
     es_data_fixture: str,
     query_data: dict,
     expected_answer: dict,
-    clear_cache: Any,
 ) -> None:
     """
     Унифицированный тест для поиска в индексах фильмов, жанров и персон.
@@ -173,7 +172,6 @@ async def test_search_validation_and_limit(
     query_data: dict,
     expected_status: int,
     expected_body: Any,
-    clear_cache: Any,
 ) -> None:
     """
     Тесты на граничные случаи валидации и ограничение количества записей.
@@ -208,7 +206,6 @@ async def test_film_search_cache(
     expected_body: list[dict],
     empty_result_body: list[dict],
     search_expected_body: dict,
-    clear_cache: Any,
 ) -> None:
     """
     Тест поиска фильмов с использованием кеша в Redis.

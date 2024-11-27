@@ -67,7 +67,7 @@ async def redis_client() -> Redis:
     yield client
     await client.aclose()
 
-@pytest.fixture
+@pytest.fixture(autouse=True)
 async def clear_cache(redis_client: Redis):
     """
     Очищает Redis по завершению теста.
