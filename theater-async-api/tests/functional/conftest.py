@@ -2,28 +2,13 @@ import asyncio
 import logging
 import random
 import uuid
+from http import HTTPStatus
 
-import aiohttp
 import pytest
-import pytest_asyncio
-from elasticsearch import AsyncElasticsearch
-from elasticsearch.helpers import async_bulk
-from redis.asyncio import Redis
-from tests.functional.settings import (
-    es_genres_settings,
-    es_movies_settings,
-    es_persons_settings,
-    test_settings,
-)
 
-# Настройки индексов Elasticsearch
-INDEX_SETTINGS_MAP = {
-    "movies": es_movies_settings,
-    "genres": es_genres_settings,
-    "persons": es_persons_settings,
-}
+
 STATUSES_WITH_DYNAMIC_BODY = [
-    422,
+    HTTPStatus.UNPROCESSABLE_ENTITY,
 ]
 
 # Настройка логирования
@@ -42,111 +27,6 @@ def event_loop() -> asyncio.AbstractEventLoop:
         loop = asyncio.new_event_loop()
     yield loop
     loop.close()
-
-
-@pytest_asyncio.fixture(name="es_client", scope="session")
-async def es_client() -> AsyncElasticsearch:
-    """
-    Создает клиент Elasticsearch для работы с асинхронным API.
-    """
-    client = AsyncElasticsearch(
-        hosts=test_settings.elasticsearch_url, verify_certs=False
-    )
-    yield client
-    await client.close()
-
-
-@pytest_asyncio.fixture(name="redis_client", scope="session")
-async def redis_client() -> Redis:
-    """
-    Создает асинхронного клиента Redis для использования в тестах.
-    """
-    client = Redis(
-        host=test_settings.redis_host, port=test_settings.redis_port
-    )
-    yield client
-    await client.aclose()
-
-@pytest.fixture(autouse=True)
-async def clear_cache(redis_client: Redis):
-    """
-    Очищает Redis по завершению теста.
-    """
-    yield
-    await redis_client.flushall()
-
-
-@pytest_asyncio.fixture(name="clear_redis")
-def clear_redis(redis_client: Redis):
-    """
-    Очищает Redis.
-    """
-
-    async def inner() -> None:
-        await redis_client.flushall()
-
-    return inner
-
-
-@pytest_asyncio.fixture(name="clear_es_indices")
-def clear_es_indices(es_client: AsyncElasticsearch):
-    """
-    Удаляет указанный индекс в Elasticsearch.
-    """
-
-    async def inner(
-        index_name: str,
-    ) -> None:
-        es_settings = INDEX_SETTINGS_MAP[index_name]
-        if await es_client.indices.exists(index=es_settings.es_index):
-            await es_client.indices.delete(index=es_settings.es_index)
-
-    return inner
-
-
-@pytest_asyncio.fixture(name="es_write_data")
-def es_write_data(es_client: AsyncElasticsearch):
-    """
-    Записывает данные в указанный индекс Elasticsearch.
-    """
-
-    async def inner(
-        data: list[dict], index_name: str, prepare: bool = True
-    ) -> None:
-        es_settings = INDEX_SETTINGS_MAP[index_name]
-        if await es_client.indices.exists(index=es_settings.es_index):
-            await es_client.indices.delete(index=es_settings.es_index)
-        await es_client.indices.create(
-            index=es_settings.es_index, **es_settings.es_index_mapping
-        )
-        if prepare:
-            data = prepare_data_for_es(data, es_settings.es_index)
-        updated, errors = await async_bulk(
-            client=es_client,
-            actions=data,
-            refresh=True,
-        )
-        if errors:
-            raise Exception("Ошибка записи данных в Elasticsearch")
-
-    return inner
-
-
-@pytest_asyncio.fixture(name="make_get_request")
-def make_get_request():
-    """
-    Выполняет GET-запрос к тестируемому сервису.
-    """
-
-    async def inner(url: str, params: dict = None) -> tuple[int, dict]:
-        url = f"{test_settings.service_url}{url}"
-        async with aiohttp.ClientSession() as session:
-            async with session.get(url, params=params) as response:
-                body = await response.json()
-                status = response.status
-        return status, body
-
-    return inner
 
 
 def generate_uuids(seed: int = 42, count: int = 40) -> list[str]:
@@ -356,20 +236,3 @@ def search_expected_body():
     ]
     count = len(MOVIES_RATINGS)
     return {"count": count, "result": result[:10]}
-
-
-def prepare_data_for_es(in_data: list[dict], index_name: str) -> list[dict]:
-    """
-    Преобразует данные для загрузки в Elasticsearch.
-
-    Args:
-        in_data (list[dict]): Исходные данные.
-        index_name (str): Имя индекса.
-
-    Returns:
-        list[dict]: Преобразованные данные.
-    """
-    return [
-        {"_index": index_name, "_id": row["id"], "_source": row}
-        for row in in_data
-    ]
