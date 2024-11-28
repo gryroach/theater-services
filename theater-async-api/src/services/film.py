@@ -1,16 +1,8 @@
-from functools import lru_cache
 from uuid import UUID
 
-from core.config import settings
-from db.elastic import EsIndexes, get_elastic
-from db.redis import get_redis
-from elasticsearch import AsyncElasticsearch
-from fastapi import Depends
 from models.enums import FilmsSortOptions
 from models.film import Film, FilmShort
-from redis.asyncio import Redis
 from services.base import BaseService
-from services.repositories.film import FilmElasticRepository
 
 
 class FilmService(BaseService):
@@ -56,19 +48,3 @@ class FilmService(BaseService):
             genre=genre,
         )
         return films
-
-
-@lru_cache()
-def get_film_service(
-    redis: Redis = Depends(get_redis),
-    elastic: AsyncElasticsearch = Depends(get_elastic),
-) -> FilmService:
-    repository = FilmElasticRepository(
-        EsIndexes.movies.value, elastic, Film, FilmShort
-    )
-    return FilmService(
-        repository=repository,
-        cache_service=redis,
-        key_prefix=repository.index_name,
-        cache_expire=settings.film_cache_expire_in_seconds,
-    )

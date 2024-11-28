@@ -1,22 +1,29 @@
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+
+from api.v1.pagination import PaginationParams
+from dependencies.services.film_service_factory import get_film_service
+from dependencies.services.search_service_factory import (
+    get_films_search_service,
+)
 from models import Film, FilmShort, FilmsSortOptions
 from models.search import FilmSearch
-from services.film import FilmService, get_film_service
-from services.search import SearchService, get_films_search_service
+from services.film import FilmService
+from services.search import SearchService
 
 router = APIRouter()
 
 
 @router.get("/search/", response_model=FilmSearch)
 async def films_search(
-    page_size: int = Query(default=10, ge=1, le=50),
-    page_number: int = Query(default=1, ge=1),
     query: str = Query(default=""),
+    pagination_params: PaginationParams = Depends(PaginationParams),
     search_service: SearchService = Depends(get_films_search_service),
 ) -> FilmSearch:
-    films = await search_service.search(query, page_size, page_number)
+    films = await search_service.search(
+        query, pagination_params.page_size, pagination_params.page_number
+    )
     return films
 
 
@@ -35,10 +42,11 @@ async def film_details(
 @router.get("/", response_model=list[FilmShort])
 async def films_list(
     sort: FilmsSortOptions = Query(default=FilmsSortOptions.desc),
-    page_size: int = Query(default=10, ge=1, le=50),
-    page_number: int = Query(default=1, ge=1),
+    pagination_params: PaginationParams = Depends(PaginationParams),
     genre: UUID | None = Query(default=None),
     film_service: FilmService = Depends(get_film_service),
 ) -> list[FilmShort]:
-    films = await film_service.get_films(sort, page_size, page_number, genre)
+    films = await film_service.get_films(
+        sort, pagination_params.page_size, pagination_params.page_number, genre
+    )
     return [FilmShort(**dict(film)) for film in films]
