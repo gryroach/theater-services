@@ -2,7 +2,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 
-from api.v1.pagination import PaginationParams, get_pagination_params
+from api.v1.pagination import PaginationParams
 from dependencies.services.film_service_factory import get_film_service
 from dependencies.services.search_service_factory import (
     get_films_search_service,
@@ -18,7 +18,7 @@ router = APIRouter()
 @router.get("/search/", response_model=FilmSearch)
 async def films_search(
     query: str = Query(default=""),
-    pagination_params: PaginationParams = Depends(get_pagination_params),
+    pagination_params: PaginationParams = Depends(PaginationParams),
     search_service: SearchService = Depends(get_films_search_service),
 ) -> FilmSearch:
     films = await search_service.search(
@@ -42,7 +42,7 @@ async def film_details(
 @router.get("/", response_model=list[FilmShort])
 async def films_list(
     sort: FilmsSortOptions = Query(default=FilmsSortOptions.desc),
-    pagination_params: PaginationParams = Depends(get_pagination_params),
+    pagination_params: PaginationParams = Depends(PaginationParams),
     genre: UUID | None = Query(default=None),
     film_service: FilmService = Depends(get_film_service),
 ) -> list[FilmShort]:

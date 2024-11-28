@@ -2,7 +2,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 
-from api.v1.pagination import PaginationParams, get_pagination_params
+from api.v1.pagination import PaginationParams
 from dependencies.services.genre_service_factory import get_genre_service
 from dependencies.services.search_service_factory import (
     get_genres_search_service,
@@ -18,7 +18,7 @@ router = APIRouter()
 @router.get("/search/", response_model=GenreSearch)
 async def genres_search(
     query: str = Query(default=""),
-    pagination_params: PaginationParams = Depends(get_pagination_params),
+    pagination_params: PaginationParams = Depends(PaginationParams),
     search_service: SearchService = Depends(get_genres_search_service),
 ):
     genres = await search_service.search(
@@ -29,7 +29,7 @@ async def genres_search(
 
 @router.get("/", response_model=list[Genre])
 async def get_genres(
-    pagination_params: PaginationParams = Depends(get_pagination_params),
+    pagination_params: PaginationParams = Depends(PaginationParams),
     genre_service: GenreService = Depends(get_genre_service),
 ):
     genres = await genre_service.get_all_genres(
@@ -53,7 +53,7 @@ async def get_genre(
 @router.get("/{uuid}/popular_films", response_model=list[FilmShort])
 async def get_popular_films_by_genre(
     uuid: UUID,
-    pagination_params: PaginationParams = Depends(get_pagination_params),
+    pagination_params: PaginationParams = Depends(PaginationParams),
     genre_service: GenreService = Depends(get_genre_service),
 ):
     films = await genre_service.get_popular_films(
