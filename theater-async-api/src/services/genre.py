@@ -1,17 +1,9 @@
 import logging
-from functools import lru_cache
 from uuid import UUID
 
-from core.config import settings
-from db.elastic import EsIndexes, get_elastic
-from db.redis import get_redis
-from elasticsearch import AsyncElasticsearch
-from fastapi import Depends
 from models import FilmShort
 from models.genre import Genre
-from redis.asyncio import Redis
 from services.base import BaseService
-from services.repositories.genre import GenreElasticRepository
 
 logger = logging.getLogger(__name__)
 
@@ -60,19 +52,3 @@ class GenreService(BaseService):
                     page_number=page_number,
                 )
         return films
-
-
-@lru_cache()
-def get_genre_service(
-    redis: Redis = Depends(get_redis),
-    elastic: AsyncElasticsearch = Depends(get_elastic),
-) -> GenreService:
-    repository = GenreElasticRepository(
-        EsIndexes.genres.value, elastic, Genre, Genre
-    )
-    return GenreService(
-        repository=repository,
-        cache_service=redis,
-        key_prefix=repository.index_name,
-        cache_expire=settings.person_cache_expire_in_seconds,
-    )

@@ -1,16 +1,8 @@
-from functools import lru_cache
 from uuid import UUID
 
-from core.config import settings
-from db.elastic import EsIndexes, get_elastic
-from db.redis import get_redis
-from elasticsearch import AsyncElasticsearch
-from fastapi import Depends
 from models.film import FilmShort
 from models.person import Person
-from redis.asyncio import Redis
 from services.base import BaseService
-from services.repositories.person import PersonElasticRepository
 
 
 class PersonService(BaseService):
@@ -59,19 +51,3 @@ class PersonService(BaseService):
                     page_number=page_number,
                 )
         return films
-
-
-@lru_cache()
-def get_person_service(
-    redis: Redis = Depends(get_redis),
-    elastic: AsyncElasticsearch = Depends(get_elastic),
-) -> PersonService:
-    repository = PersonElasticRepository(
-        EsIndexes.persons.value, elastic, Person, Person
-    )
-    return PersonService(
-        repository=repository,
-        cache_service=redis,
-        key_prefix=repository.index_name,
-        cache_expire=settings.genre_cache_expire_in_seconds,
-    )
