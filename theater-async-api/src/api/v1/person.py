@@ -3,10 +3,14 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 
 from api.v1.pagination import PaginationParams, get_pagination_params
+from dependencies.services.person_service_factory import get_person_service
+from dependencies.services.search_service_factory import (
+    get_persons_search_service,
+)
 from models import FilmShort, Person
 from models.search import PersonSearch
-from services.person import PersonService, get_person_service
-from services.search import SearchService, get_persons_search_service
+from services.person import PersonService
+from services.search import SearchService
 
 router = APIRouter()
 

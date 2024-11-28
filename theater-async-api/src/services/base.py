@@ -19,6 +19,10 @@ class CacheServiceInterface(Protocol):
         pass
 
 
+class DatabaseServiceInterface(Protocol):
+    pass
+
+
 class CacheServiceMixin:
     def __init__(
         self,
