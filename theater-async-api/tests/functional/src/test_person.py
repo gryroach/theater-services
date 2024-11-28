@@ -1,4 +1,5 @@
 import logging
+from http import HTTPStatus
 from typing import Any
 
 import pytest
@@ -13,7 +14,12 @@ logger = logging.getLogger(__name__)
 @pytest.mark.parametrize(
     "url, query_data, expected_status, expected_body",
     [
-        ("/api/v1/persons/invalid_uuid", {}, 422, {"detail": "Invalid UUID"}),
+        (
+            "/api/v1/persons/invalid_uuid",
+            {},
+            HTTPStatus.UNPROCESSABLE_ENTITY,
+            {"detail": "Invalid UUID"}
+        ),
     ],
 )
 @pytest.mark.asyncio(loop_scope="session")
@@ -41,7 +47,7 @@ async def test_invalid_uuid(
         (
             "/api/v1/persons/ef86b8ff-3c82-4d31-ad8e-72b69f4e3f95",
             {},
-            200,
+            HTTPStatus.OK,
             {"id": "ef86b8ff-3c82-4d31-ad8e-72b69f4e3f95", "full_name": "Ann"},
         ),
     ],
@@ -71,7 +77,7 @@ async def test_valid_uuid(
         (
             "/api/v1/persons/fb111f22-121e-44a7-b78f-b19191810fbf/film?page_size=50&page_number=1",
             {},
-            200,
+            HTTPStatus.OK,
             [{"id": uuid} for uuid in UUIDS],
         ),
     ],
@@ -103,7 +109,7 @@ async def test_person_films(
         (
             "/api/v1/persons/",
             {},
-            200,
+            HTTPStatus.OK,
             [
                 {"id": "ef86b8ff-3c82-4d31-ad8e-72b69f4e3f95"},
                 {"id": "fb111f22-121e-44a7-b78f-b19191810fbf"},
@@ -115,7 +121,7 @@ async def test_person_films(
         (
             "/api/v1/persons/",
             {"page_size": 3, "page_number": 2},
-            200,
+            HTTPStatus.OK,
             [
                 {"id": "b45bd7bc-2e16-46d5-b125-983d356768c6"},
                 {"id": "4c1d0404-075e-4027-b4ae-01d5d4a10a9b"},
@@ -124,7 +130,7 @@ async def test_person_films(
         (
             "/api/v1/persons/",
             {"page_size": 10, "page_number": 5},
-            200,
+            HTTPStatus.OK,
             [],
         ),
     ],
@@ -154,7 +160,7 @@ async def test_person_pagination(
         (
             "/api/v1/persons/fb111f22-121e-44a7-b78f-b19191810fbf/film?page_size=50&page_number=1",
             {},
-            200,
+            HTTPStatus.OK,
             [{"id": uuid} for uuid in UUIDS],
         ),
     ],
@@ -177,7 +183,7 @@ async def test_person_films_cache(
     """
     await write_data_to_es(es_write_data, es_persons_data, es_persons_settings)
     await write_data_to_es(es_write_data, es_movies_data, es_movies_settings)
-    status, body = await make_get_request(url, query_data)
+    await make_get_request(url, query_data)
     await clear_es_indices(es_movies_settings.es_index)
     status, body = await make_get_request(url, query_data)
     assert status == expected_status
@@ -186,4 +192,4 @@ async def test_person_films_cache(
     )
     await clear_redis()
     status, body = await make_get_request(url, query_data)
-    assert status == 404
+    assert status == HTTPStatus.NOT_FOUND

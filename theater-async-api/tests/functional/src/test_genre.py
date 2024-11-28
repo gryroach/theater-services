@@ -1,4 +1,5 @@
 import logging
+from http import HTTPStatus
 from typing import Any
 
 import pytest
@@ -13,7 +14,12 @@ logger = logging.getLogger(__name__)
 @pytest.mark.parametrize(
     "url, query_data, expected_status, expected_body",
     [
-        ("/api/v1/genres/invalid_uuid", {}, 422, {"detail": "Invalid UUID"}),
+        (
+            "/api/v1/genres/invalid_uuid",
+            {},
+            HTTPStatus.UNPROCESSABLE_ENTITY,
+            {"detail": "Invalid UUID"}
+        ),
     ],
 )
 @pytest.mark.asyncio(loop_scope="session")
@@ -41,7 +47,7 @@ async def test_invalid_genre_uuid(
         (
             "/api/v1/genres/ef86b8ff-3c82-4d31-ad8e-72b69f4e3100",
             {},
-            200,
+            HTTPStatus.OK,
             {
                 "id": "ef86b8ff-3c82-4d31-ad8e-72b69f4e3100",
                 "name": "Action",
@@ -75,7 +81,7 @@ async def test_valid_genre_uuid(
         (
             "/api/v1/genres/",
             {"page_size": 2, "page_number": 1},
-            200,
+            HTTPStatus.OK,
             [
                 {
                     "id": "ef86b8ff-3c82-4d31-ad8e-72b69f4e3100",
@@ -90,7 +96,7 @@ async def test_valid_genre_uuid(
         (
             "/api/v1/genres/",
             {"page_size": 1, "page_number": 2},
-            200,
+            HTTPStatus.OK,
             [
                 {
                     "id": "fb111f22-121e-44a7-b78f-b19191810100",
@@ -101,7 +107,7 @@ async def test_valid_genre_uuid(
         (
             "/api/v1/genres/",
             {"page_size": 50, "page_number": 100},
-            200,
+            HTTPStatus.OK,
             [],
         ),
     ],
@@ -131,7 +137,7 @@ async def test_genres_pagination(
         (
             "/api/v1/genres/ef86b8ff-3c82-4d31-ad8e-72b69f4e3100/popular_films?page_size=50&page_number=1",
             {},
-            200,
+            HTTPStatus.OK,
             [{"id": uuid} for uuid in UUIDS],
         ),
     ],
@@ -154,7 +160,7 @@ async def test_genre_cache(
     """
     await write_data_to_es(es_write_data, es_genres_data, es_genres_settings)
     await write_data_to_es(es_write_data, es_movies_data, es_movies_settings)
-    status, body = await make_get_request(url, query_data)
+    await make_get_request(url, query_data)
     await clear_es_indices(es_movies_settings.es_index)
     status, body = await make_get_request(url, query_data)
     assert status == expected_status
@@ -163,4 +169,4 @@ async def test_genre_cache(
     )
     await clear_redis()
     status, body = await make_get_request(url, query_data)
-    assert status == 404
+    assert status == HTTPStatus.NOT_FOUND

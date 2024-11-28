@@ -1,3 +1,4 @@
+from http import HTTPStatus
 from typing import Any
 
 import pytest
@@ -19,21 +20,21 @@ from tests.functional.utils.es_helpers import write_data_to_es
             "/api/v1/films/search/",
             "es_movies_data",
             {"query": "The Star", "page_size": 10},
-            {"status": 200, "count": 40, "length": 10},
+            {"status": HTTPStatus.OK, "count": 40, "length": 10},
         ),
         (
             "movies",
             "/api/v1/films/search/",
             "es_movies_data",
             {"query": "Mashed potato"},
-            {"status": 200, "count": 0, "length": 0},
+            {"status": HTTPStatus.OK, "count": 0, "length": 0},
         ),
         (
             "movies",
             "/api/v1/films/search/",
             "es_movies_data",
             {"query": '"The Star"'},
-            {"status": 200, "count": 40, "length": 10},
+            {"status": HTTPStatus.OK, "count": 40, "length": 10},
         ),
         # Тесты для жанров
         (
@@ -41,21 +42,21 @@ from tests.functional.utils.es_helpers import write_data_to_es
             "/api/v1/genres/search/",
             "es_genres_data",
             {"query": "Action", "page_size": 10},
-            {"status": 200, "count": 1, "length": 1},
+            {"status": HTTPStatus.OK, "count": 1, "length": 1},
         ),
         (
             "genres",
             "/api/v1/genres/search/",
             "es_genres_data",
             {"query": "Nonexistent"},
-            {"status": 200, "count": 0, "length": 0},
+            {"status": HTTPStatus.OK, "count": 0, "length": 0},
         ),
         (
             "genres",
             "/api/v1/genres/search/",
             "es_genres_data",
             {"query": '"Action"'},
-            {"status": 200, "count": 1, "length": 1},
+            {"status": HTTPStatus.OK, "count": 1, "length": 1},
         ),
         # Тесты для персон
         (
@@ -63,21 +64,21 @@ from tests.functional.utils.es_helpers import write_data_to_es
             "/api/v1/persons/search/",
             "es_persons_data",
             {"query": "Ann", "page_size": 10},
-            {"status": 200, "count": 1, "length": 1},
+            {"status": HTTPStatus.OK, "count": 1, "length": 1},
         ),
         (
             "persons",
             "/api/v1/persons/search/",
             "es_persons_data",
             {"query": "Unknown"},
-            {"status": 200, "count": 0, "length": 0},
+            {"status": HTTPStatus.OK, "count": 0, "length": 0},
         ),
         (
             "persons",
             "/api/v1/persons/search/",
             "es_persons_data",
             {"query": '"Ann"'},
-            {"status": 200, "count": 1, "length": 1},
+            {"status": HTTPStatus.OK, "count": 1, "length": 1},
         ),
         # Сложные фразы
         (
@@ -85,7 +86,7 @@ from tests.functional.utils.es_helpers import write_data_to_es
             "/api/v1/films/search/",
             "es_movies_data",
             {"query": 'The Star AND "Potato"', "page_size": 10},
-            {"status": 200, "count": 40, "length": 10},
+            {"status": HTTPStatus.OK, "count": 40, "length": 10},
         ),
         (
             "movies",
@@ -95,7 +96,7 @@ from tests.functional.utils.es_helpers import write_data_to_es
                 "query": 'The Star OR "Potato"',
                 "page_size": 10,
             },
-            {"status": 200, "count": 40, "length": 10},
+            {"status": HTTPStatus.OK, "count": 40, "length": 10},
         ),
     ],
 )
@@ -134,31 +135,31 @@ async def test_search_entities(
         (
             "/api/v1/films/search/",
             {"query": "", "page_size": 10},
-            200,
+            HTTPStatus.OK,
             {"count": 0, "result": []},
         ),
         (
             "/api/v1/genres/search/",
             {"query": "", "page_size": 10},
-            200,
+            HTTPStatus.OK,
             {"count": 0, "result": []},
         ),
         (
             "/api/v1/persons/search/",
             {"query": "", "page_size": 10},
-            200,
+            HTTPStatus.OK,
             {"count": 0, "result": []},
         ),
         (
             "/api/v1/films/search/",
             {"query": "star", "page_size": 0},
-            422,
+            HTTPStatus.UNPROCESSABLE_ENTITY,
             {"detail": "Page size must be at least 1"},
         ),
         (
             "/api/v1/films/search/",
             {"query": "star", "page_number": -1},
-            422,
+            HTTPStatus.UNPROCESSABLE_ENTITY,
             {"detail": "Page number must be positive"},
         ),
     ],
@@ -188,7 +189,7 @@ async def test_search_validation_and_limit(
         (
             "/api/v1/films/search/",
             {"query": "The Star"},
-            200,
+            HTTPStatus.OK,
             {"count": 0, "result": []},
         ),
     ],
@@ -226,5 +227,5 @@ async def test_film_search_cache(
     await clear_redis()
     # Выполняем запрос, должно вернуться тело запроса с пустым списком
     status, body_after_clear_cache = await make_get_request(url, query_data)
-    assert status == 200
+    assert status == HTTPStatus.OK
     assert body_after_clear_cache == empty_result_body
