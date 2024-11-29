@@ -1,23 +1,24 @@
 import asyncio
-import time
+import logging
 
 import aiohttp
-
+import backoff
 from functional.settings import test_settings
 
+logging.getLogger(__name__)
 
-async def api_resource_is_available():
+
+@backoff.on_exception(backoff.expo, ConnectionError, max_tries=10)
+async def api_resource_is_available() -> bool:
+    """Проверяет доступность API-ресурса."""
     async with aiohttp.ClientSession() as session:
         try:
-            async with session.get(test_settings.service_url):
+            async with session.get(test_settings.service_url, timeout=2):
+                logging.info("Соединение с theater api services установленно")
                 return True
-        except aiohttp.ClientError:
-            return False
+        except Exception:
+            raise ConnectionError
 
 
 if __name__ == "__main__":
-    while True:
-        available = asyncio.run(api_resource_is_available())
-        if available:
-            break
-        time.sleep(1)
+    asyncio.run(api_resource_is_available())
