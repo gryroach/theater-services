@@ -11,5 +11,4 @@ dependencies = [
     "pydantic-settings==2.6.1",
     "redis==5.2.0",
     "uvicorn==0.32.0",
-    "backoff==2.2.1",
 ]

@@ -24,10 +24,10 @@ services:
       - ../../tests/functional/src:/app/tests/functional/src
     entrypoint: >
       sh -c "uv pip install --system -r tests/functional/requirements.txt
-      && uv run tests/functional/utils/wait_for_es.py
-      && uv run tests/functional/utils/wait_for_redis.py
-      && uv run tests/functional/utils/wait_for_api.py
-      && uv run pytest tests/functional/src -s"
+      && python tests/functional/utils/wait_for_es.py
+      && python tests/functional/utils/wait_for_redis.py
+      && python tests/functional/utils/wait_for_api.py
+      && pytest tests/functional/src -s"
 
   es:
     image: elasticsearch:8.6.2
