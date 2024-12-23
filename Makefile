@@ -10,6 +10,10 @@ run-api:
 run-admin:
 	docker compose up -d --build web nginx
 
+# Запуск сервиса авторизации
+run-auth:
+	docker compose up -d --build api-auth nginx
+
 # Запуск сервиса переноса данных из БД в Elasticsearch
 run-etl:
 	docker compose up -d --build etl
@@ -18,6 +22,10 @@ run-etl:
 down:
 	docker compose down
 
-# Запуск тестов и остановка сервисов
+# Запуск тестов API фильмов и остановка сервисов
 run-functional-tests:
 	bash ./theater-async-api/tests/functional/run_tests.sh
+
+# Запуск тестов API сервиса авторизации
+run-auth-tests:
+	docker compose up --build test-auth

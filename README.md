@@ -4,6 +4,7 @@
 - админка
 - etl-сервис переноса данных из postgres в elasticsearch
 - api-сервис
+- сервис авторизации
 
 Все взаимодействие с сервисами происходит через NGINX через 80-й порт.
 
@@ -27,11 +28,18 @@ nano ./src/.env
 make run-all
 ```
 
-#### Запуск асинхронного API
+#### Запуск API сервиса фильмов
 ```shell
 make run-api
 ```
 Адрес документации API - `http://127.0.0.1/api/openapi`
+
+#### Запуск API сервиса авторизации
+```shell
+make run-auth
+```
+Адрес документации API - `http://127.0.0.1/api-auth/openapi`
+
 
 #### Запуск админки
 ```shell
@@ -53,7 +61,7 @@ make down
 
 ## Тестирование
 
-### Тестирование API
+### Тестирование API сервиса фильмов
 
 1. Создайте файл `.env.tests` на основе `.env.tests.example`:
 ```shell
@@ -88,3 +96,8 @@ pip install -r theater-async-api/tests/functional/requirements.txt
 pytest theater-async-api/tests/functional/src
 ```
 
+### Тестирование API сервиса авторизации
+Запуск через докер (предварительно запустите сервисы `db-auth` и `redis-auth`):
+```shell
+make run-auth-tests
+```
