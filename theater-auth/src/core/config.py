@@ -42,6 +42,10 @@ class AppSettings(BaseSettings):
     SESSION_VERSION_KEY_TEMPLATE: str = "session_version:{}"
     INVALID_REFRESH_TOKEN_TEMPLATE: str = "invalid:refresh:{}"
 
+    # Трассировка
+    jaeger_host: str = Field(default="jaeger")
+    jaeger_port: int = Field(default=6831)
+
     model_config = SettingsConfigDict(
         env_file=DOTENV_PATH,
         env_file_encoding="utf-8",
