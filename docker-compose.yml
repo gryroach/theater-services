@@ -166,6 +166,21 @@ services:
     env_file:
       - ./.env
 
+  jaeger:
+    image: jaegertracing/all-in-one:1.57
+    container_name: movies_jaeger
+    ports:
+      - "5775:5775/udp"
+      - "6831:6831/udp"
+      - "6832:6832/udp"
+      - "5778:5778"
+      - "16686:16686"
+      - "14268:14268"
+      - "14269:14269"
+      - "14250:14250"
+      - "9411:9411"
+    restart: on-failure
+
 volumes:
   movies_data:
   movies_auth_data:
