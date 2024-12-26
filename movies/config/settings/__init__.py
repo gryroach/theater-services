@@ -13,6 +13,7 @@ base_settings = [
     'components/installed_apps.py',
     'components/middlewares.py',
     'components/loggers.py',
+    'components/tracer.py',
     # Select the right env:
     f'environments/{_ENV}.py',
     # Optionally override some settings:

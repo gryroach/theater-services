@@ -1,8 +1,8 @@
 version: '3'
 services:
-  web:
+  admin:
     build: movies
-    container_name: movies_web
+    container_name: movies_admin
     restart: always
     volumes:
       - static_volume:/opt/app/static

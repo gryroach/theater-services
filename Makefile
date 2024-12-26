@@ -8,7 +8,7 @@ run-api:
 
 # Запуск админки
 run-admin:
-	docker compose up -d --build web nginx
+	docker compose up -d --build admin nginx
 
 # Запуск сервиса авторизации
 run-auth:
