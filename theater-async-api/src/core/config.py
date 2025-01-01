@@ -53,7 +53,14 @@ class Settings(BaseSettings):
         default=60 * 20, alias="GENRE_CACHE_EXPIRE_IN_SECONDS"
     )
 
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
+    # Трассировка
+    jaeger_host: str = Field(default="jaeger")
+    jaeger_port: int = Field(default=6831)
+
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+    )
 
     @property
     def elasticsearch_url(self) -> str:

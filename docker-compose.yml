@@ -1,8 +1,8 @@
 version: '3'
 services:
-  web:
+  admin:
     build: movies
-    container_name: movies_web
+    container_name: movies_admin
     restart: always
     volumes:
       - static_volume:/opt/app/static
@@ -43,6 +43,22 @@ services:
       es:
         condition: service_healthy
 
+  api-auth:
+    build: theater-auth
+    image: movies-auth-image
+    container_name: movies_auth
+    env_file:
+      - ./.env
+    volumes:
+      - ./theater-auth/src:/app/src
+    expose:
+      - "8000"
+    depends_on:
+      redis-auth:
+        condition: service_healthy
+      db-auth:
+        condition: service_healthy
+
   nginx:
     image: nginx:latest
     container_name: movies_nginx
@@ -71,6 +87,25 @@ services:
       - "5432"
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U postgres -d ${DB_NAME}" ]
+      interval: 5s
+      retries: 5
+      timeout: 5s
+
+  db-auth:
+    image: postgres:16
+    container_name: movies_db_auth
+    restart: always
+    volumes:
+      - movies_auth_data:/var/lib/postgresql/data/
+    env_file:
+      - ./.env
+    environment:
+      - POSTGRES_PASSWORD=${AUTH_POSTGRES_PASSWORD}
+      - POSTGRES_DB=${AUTH_POSTGRES_DB}
+    expose:
+      - "5432"
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres -d ${AUTH_POSTGRES_DB}" ]
       interval: 5s
       retries: 5
       timeout: 5s
@@ -108,8 +143,47 @@ services:
       timeout: 3s
       retries: 50
 
+
+  redis-auth:
+    image: redis:7.4.1-alpine
+    container_name: movies_redis_auth
+    restart: always
+    environment:
+      ALLOW_EMPTY_PASSWORD: "yes"
+    healthcheck:
+      test: redis-cli ping
+      interval: 1s
+      timeout: 3s
+      retries: 50
+
+  test-auth:
+    build: theater-auth
+    image: movies-auth-image
+    container_name: movies_auth_tests
+    environment:
+      - PYTHONPATH=/app
+    entrypoint: "uv run pytest"
+    env_file:
+      - ./.env
+
+  jaeger:
+    image: jaegertracing/all-in-one:1.57
+    container_name: movies_jaeger
+    ports:
+      - "5775:5775/udp"
+      - "6831:6831/udp"
+      - "6832:6832/udp"
+      - "5778:5778"
+      - "16686:16686"
+      - "14268:14268"
+      - "14269:14269"
+      - "14250:14250"
+      - "9411:9411"
+    restart: on-failure
+
 volumes:
   movies_data:
+  movies_auth_data:
   movies_es:
   static_volume:
   media_volume:

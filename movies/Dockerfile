@@ -17,8 +17,6 @@ RUN  mkdir -p /var/www/static/ \
   && mkdir -p /opt/app/static/ \
   && mkdir -p /opt/app/media/
 
-COPY django-entrypoint.sh django-entrypoint.sh
-
 COPY poetry.lock pyproject.toml ./
 RUN POETRY_VIRTUALENVS_CREATE=false poetry install --no-interaction --no-ansi --no-root
 
