@@ -1,11 +1,8 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Request
-from sqlalchemy.ext.asyncio import AsyncSession
-from starlette import status
-
 from db.db import get_session
 from dependencies.auth import JWTBearer, get_current_user
+from fastapi import APIRouter, Depends, Request
 from schemas.login import LoginHistoryInDB, LoginRequest, LoginResponse
 from schemas.paginator import PaginationResult, Paginator
 from schemas.refresh import TokenRefreshRequest, TokenResponse
@@ -16,6 +13,8 @@ from services.login_history import (
     get_login_history_service,
 )
 from services.user import UserService, get_user_service
+from sqlalchemy.ext.asyncio import AsyncSession
+from starlette import status
 
 router = APIRouter()
 

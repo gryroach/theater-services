@@ -1,9 +1,8 @@
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, field_validator
-from werkzeug.security import generate_password_hash
-
 from services.roles import Roles
+from werkzeug.security import generate_password_hash
 
 
 class UserCredentials(BaseModel):
@@ -18,6 +17,15 @@ class UserRegister(UserCredentials):
 
 class UserCreate(UserRegister):
     role: str = Roles.regular_user.name
+
+
+class UserProfileInfo(BaseModel):
+    id: UUID
+    login: str
+    first_name: str | None = None
+    last_name: str | None = None
+    role: str
+    is_active: bool = True
 
 
 class UserInDB(BaseModel):
