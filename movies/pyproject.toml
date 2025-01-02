@@ -2,7 +2,10 @@
 name = "movies"
 version = "0.1.0"
 description = ""
-authors = ["sgavrilenko <gryroach@gmail.com>", "K.Yarkov <k.yarkov@marine-rc.ru>"]
+authors = [
+    "sgavrilenko <gryroach@gmail.com>",
+    "K.Yarkov <k.yarkov@marine-rc.ru>",
+]
 
 [tool.poetry.dependencies]
 python = "^3.12"

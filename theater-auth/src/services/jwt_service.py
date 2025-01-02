@@ -1,7 +1,6 @@
 from datetime import datetime, timedelta, timezone
 
 import jwt
-
 from core.config import settings
 from core.enums import PayloadKeys, TokenTypes
 from exceptions.auth_exceptions import (
@@ -30,7 +29,7 @@ class JWTService:
         return jwt.encode(payload, self.private_key, algorithm=self.algorithm)
 
     def create_access_token(
-            self, user_id: str, session_version: int, role: str
+        self, user_id: str, session_version: int, role: str
     ) -> str:
         now = datetime.now(timezone.utc)
         payload = {
@@ -44,7 +43,7 @@ class JWTService:
         return self._create_token(payload)
 
     def create_refresh_token(
-            self, user_id: str, session_version: int, role: str
+        self, user_id: str, session_version: int, role: str
     ) -> str:
         now = datetime.now(timezone.utc)
         payload = {

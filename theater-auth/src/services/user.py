@@ -1,14 +1,12 @@
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import Depends
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from exceptions import InvalidCredentialsError
 from exceptions.user_exceptions import (
     UserAlreadyExistsError,
     UserDoesNotExistsError,
 )
+from fastapi import Depends
 from repositories.user import UserRepository
 from schemas.role import Role, UpdateRole
 from schemas.user import (
@@ -21,6 +19,7 @@ from schemas.user import (
 )
 from services.roles import Roles
 from services.session_service import SessionService, get_session_service
+from sqlalchemy.ext.asyncio import AsyncSession
 
 
 class UserService:
@@ -46,6 +45,14 @@ class UserService:
         )
         await self.session_service.set_session_version(str(user.id), 1)
         return UserInDB.model_validate(user)
+
+    async def get_user_by_id(
+        self, db: AsyncSession, user_id: UUID
+    ) -> UserInDB:
+        user = await self.user_repo.get(db, user_id)
+        if not user:
+            raise UserDoesNotExistsError("User does not exist")
+        return user
 
     async def get_user_role(self, db: AsyncSession, user_id: UUID) -> Role:
         user = await self.user_repo.get(db, user_id)
