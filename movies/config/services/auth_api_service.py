@@ -30,9 +30,6 @@ class AuthAPIService:
             response = self.session.post(url, json=payload)
             if response.status_code == requests.codes.ok:
                 return response.json()
-            logger.error(
-                f"Auth failed: {response.status_code} {response.text}"
-            )
         except requests.RequestException as e:
             logger.error(f"Error during authentication request: {e}")
         return None
