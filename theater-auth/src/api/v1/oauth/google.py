@@ -7,7 +7,7 @@ from starlette.responses import RedirectResponse
 
 from db.db import get_session
 from exceptions.auth_exceptions import AuthError
-from schemas.login import LoginResponse
+from schemas.login import LoginPasswordResponse
 from schemas.user import UserEmailRegister
 from services.auth import AuthService, get_auth_service
 from services.oauth.google import get_authorization_url, get_google_id_info
@@ -32,7 +32,7 @@ async def login():
 
 @router.get(
     "/callback",
-    response_model=LoginResponse,
+    response_model=LoginPasswordResponse,
     status_code=status.HTTP_200_OK,
     description=(
         "Коллбэк для получения токенов доступа через Google. "
@@ -58,7 +58,7 @@ async def callback_google(
     last_name = id_info.get("family_name", "")
     email = id_info.get("email")
 
-    user = await user_service.register_user_by_email(
+    user, password = await user_service.register_user_by_email(
         db,
         UserEmailRegister(
             first_name=first_name, last_name=last_name, email=email
@@ -74,4 +74,4 @@ async def callback_google(
         user_agent,
         user,
     )
-    return tokens
+    return LoginPasswordResponse(password=password, **tokens.model_dump())

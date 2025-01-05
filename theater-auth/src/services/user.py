@@ -118,10 +118,14 @@ class UserService:
 
     async def register_user_by_email(
             self, db: AsyncSession, user_data: UserEmailRegister
-    ) -> User:
+    ) -> tuple[User, str | None]:
+        """
+        Создание пользователя через его почту со случайным паролем.
+        Если пользователь уже существует, он возвращается без пароля.
+        """
         user = await self.user_repo.get_by_field(db, 'email', user_data.email)
         if user:
-            return user
+            return user, None
 
         alphabet = string.ascii_letters + string.digits
         user_password = ''.join(secrets.choice(alphabet) for _ in range(8))
@@ -136,7 +140,7 @@ class UserService:
             ),
         )
         await self.session_service.set_session_version(str(user.id), 1)
-        return user
+        return user, user_password
 
 
 async def get_user_service(
