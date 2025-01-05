@@ -10,6 +10,7 @@ from exceptions.auth_exceptions import (
     InvalidCredentialsError,
     InvalidSessionError,
 )
+from models import User
 from repositories.user import UserRepository
 from schemas.login import LoginHistoryCreate
 from schemas.refresh import TokenResponse
@@ -51,8 +52,10 @@ class AuthService:
         password: str,
         ip_address: str,
         user_agent: str,
+        user: User | None = None
     ):
-        user = await self.authenticate_user(db, login, password)
+        if not user:
+            user = await self.authenticate_user(db, login, password)
         session_version = await self.session_service.get_session_version(
             str(user.id)
         )

@@ -1,3 +1,5 @@
+import secrets
+import string
 from typing import Annotated
 from uuid import UUID
 
@@ -9,6 +11,7 @@ from exceptions.user_exceptions import (
     UserAlreadyExistsError,
     UserDoesNotExistsError,
 )
+from models import User
 from repositories.user import UserRepository
 from schemas.role import Role, UpdateRole
 from schemas.user import (
@@ -104,6 +107,28 @@ class UserService:
             db, db_obj=user, obj_in=user_data
         )
         return UserData.model_validate(updated_user)
+
+    async def register_user_by_email(
+            self, db: AsyncSession, user_data: UserEmailRegister
+    ) -> User:
+        user = await self.user_repo.get_by_field(db, 'email', user_data.email)
+        if user:
+            return user
+
+        alphabet = string.ascii_letters + string.digits
+        user_password = ''.join(secrets.choice(alphabet) for _ in range(8))
+        user_login = user_data.email.split("@")[0]
+
+        user = await self.user_repo.create(
+            db,
+            obj_in=UserCreate(
+                login=user_login,
+                password=user_password,
+                **user_data.model_dump(),
+            ),
+        )
+        await self.session_service.set_session_version(str(user.id), 1)
+        return user
 
 
 async def get_user_service(

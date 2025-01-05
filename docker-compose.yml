@@ -66,10 +66,12 @@ services:
     volumes:
       - ./configs/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./configs/nginx/sites:/etc/nginx/conf.d:ro
+      - ./configs/certs:/etc/nginx/certs:ro
       - static_volume:/opt/app/static
       - media_volume:/opt/app/media
     ports:
       - "80:80"
+      - "443:443"
 
   db:
     image: postgres:16
