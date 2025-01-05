@@ -2,10 +2,9 @@ import logging
 import os
 from logging import config as logging_config
 
+from core.logger import LOGGING
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
-
-from core.logger import LOGGING
 
 logging_config.dictConfig(LOGGING)
 
@@ -57,6 +56,10 @@ class Settings(BaseSettings):
     jaeger_host: str = Field(default="jaeger")
     jaeger_port: int = Field(default=6831)
 
+    # Авторизация
+    jwt_algorithm: str = Field(default="RS256")
+    jwt_public_key_path: str = Field(default="/app/keys/public_key.pem")
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
@@ -65,6 +68,18 @@ class Settings(BaseSettings):
     @property
     def elasticsearch_url(self) -> str:
         return f"{self.elastic_schema}{self.elastic_host}:{self.elastic_port}"
+
+    @property
+    def jwt_public_key(self) -> str:
+        try:
+            with open(self.jwt_public_key_path, "r") as key_file:
+                return key_file.read()
+        except FileNotFoundError:
+            raise ValueError(
+                f"Public key file not found at: {self.jwt_public_key_path}"
+            )
+        except Exception as e:
+            raise ValueError(f"Error reading public key: {str(e)}")
 
 
 settings = Settings()

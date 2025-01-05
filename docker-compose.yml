@@ -85,6 +85,8 @@ services:
     environment:
       - POSTGRES_PASSWORD=${DB_PASSWORD}
       - POSTGRES_DB=${DB_NAME}
+    ports:
+      - 5436:5432
     expose:
       - "5432"
     healthcheck:
@@ -104,6 +106,8 @@ services:
     environment:
       - POSTGRES_PASSWORD=${AUTH_POSTGRES_PASSWORD}
       - POSTGRES_DB=${AUTH_POSTGRES_DB}
+    ports:
+      - 5437:5432
     expose:
       - "5432"
     healthcheck:
