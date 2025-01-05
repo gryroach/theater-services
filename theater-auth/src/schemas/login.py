@@ -1,13 +1,15 @@
-from datetime import datetime
+from datetime import date, datetime
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict
 
 
 class LoginHistoryCreate(BaseModel):
+    id: UUID | None = None
     user_id: UUID
     ip_address: str | None
     user_agent: str | None
+    partition_date: date = date.today().replace(day=1)
 
 
 class LoginHistoryInDB(LoginHistoryCreate):
