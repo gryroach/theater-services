@@ -1,17 +1,21 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.ext.asyncio import AsyncSession
-from starlette import status
-
 from db.db import get_session
 from dependencies.auth import JWTBearer, get_current_user
+from fastapi import APIRouter, Depends, HTTPException
 from schemas.jwt import JwtTokenPayload
 from schemas.role import Role
-from schemas.user import UserCredentialsUpdate, UserData, UserInDB
+from schemas.user import (
+    UserCredentialsUpdate,
+    UserData,
+    UserInDB,
+    UserProfileInfo,
+)
 from services.roles import Roles
 from services.session_service import SessionService, get_session_service
 from services.user import UserService, get_user_service
+from sqlalchemy.ext.asyncio import AsyncSession
+from starlette import status
 
 router = APIRouter()
 
@@ -80,3 +84,25 @@ async def get_user_permission(
             detail="Invalid role",
         )
     return role
+
+
+@router.get(
+    "/info",
+    response_model=UserProfileInfo,
+    status_code=status.HTTP_200_OK,
+    summary="Получение информации о пользователе",
+    description="Возвращает минимальный набор данных для обновления или создания пользователя в Django.",
+)
+async def get_profile_info(
+    token_payload: Annotated[JwtTokenPayload, Depends(JWTBearer())],
+    user_service: Annotated[UserService, Depends(get_user_service)],
+    db: Annotated[AsyncSession, Depends(get_session)],
+) -> UserProfileInfo:
+    user = await user_service.get_user_by_id(db, user_id=token_payload.user)
+    return UserProfileInfo(
+        id=user.id,
+        login=user.login,
+        first_name=user.first_name,
+        last_name=user.last_name,
+        role=user.role,
+    )

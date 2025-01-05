@@ -16,6 +16,7 @@ COPY uv.lock .
 RUN uv sync --frozen --no-cache
 
 # Copy the application into the container.
+COPY ./keys ./keys
 COPY . .
 
 # Run the application.
