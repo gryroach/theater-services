@@ -46,6 +46,9 @@ class AppSettings(BaseSettings):
     jaeger_host: str = Field(default="jaeger")
     jaeger_port: int = Field(default=6831)
 
+    # Другие настройки
+    test_mode: bool = Field(default=False)
+
     model_config = SettingsConfigDict(
         env_file=DOTENV_PATH,
         env_file_encoding="utf-8",

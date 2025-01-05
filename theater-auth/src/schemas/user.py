@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, field_validator
+from pydantic import BaseModel, ConfigDict, EmailStr, field_validator
 from werkzeug.security import generate_password_hash
 
 from services.roles import Roles
@@ -14,6 +14,7 @@ class UserCredentials(BaseModel):
 class UserRegister(UserCredentials):
     first_name: str
     last_name: str
+    email: EmailStr | None = None
 
 
 class UserCreate(UserRegister):
@@ -24,6 +25,7 @@ class UserInDB(BaseModel):
     id: UUID
     first_name: str
     last_name: str
+    email: EmailStr | None = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -31,6 +33,7 @@ class UserInDB(BaseModel):
 class UserData(BaseModel):
     first_name: str
     last_name: str
+    email: EmailStr | None = None
 
     model_config = ConfigDict(from_attributes=True)
 

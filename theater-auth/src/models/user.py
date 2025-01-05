@@ -14,6 +14,7 @@ class User(Base):
     last_name = Column(String(50))
     role = Column(String(50), default=Roles.regular_user.name, nullable=False)
     created_at = Column(DateTime, default=func.now())
+    email = Column(String(255), unique=True, nullable=True)
 
     def __init__(
         self,
@@ -22,6 +23,7 @@ class User(Base):
         first_name: str,
         last_name: str,
         role: str | None = None,
+        email: str | None = None,
     ) -> None:
         self.login = login
         self.password = generate_password_hash(password)
@@ -29,6 +31,8 @@ class User(Base):
         self.last_name = last_name
         if role is not None:
             self.role = role
+        if email is not None:
+            self.email = email
 
     def check_password(self, password: str) -> bool:
         return check_password_hash(self.password, password)

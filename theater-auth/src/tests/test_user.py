@@ -53,7 +53,11 @@ async def login_admin_user(
         "login": create_admin_user.login,
         "password": "123",
     }
-    response = await client.post("api-auth/v1/auth/login", json=login_data)
+    response = await client.post(
+        "api-auth/v1/auth/login",
+        json=login_data,
+        headers={"X-Request-Id": "test"},
+    )
     assert response.status_code == status.HTTP_200_OK
     return response.json()
 
@@ -65,7 +69,11 @@ async def login_user(client: AsyncClient, create_regular_user: User) -> dict:
         "login": create_regular_user.login,
         "password": "123",
     }
-    response = await client.post("api-auth/v1/auth/login", json=login_data)
+    response = await client.post(
+        "api-auth/v1/auth/login",
+        json=login_data,
+        headers={"X-Request-Id": "test"},
+    )
     assert response.status_code == status.HTTP_200_OK
     return response.json()
 
@@ -78,7 +86,11 @@ async def test_login_user_wrong_pass(
         "login": create_regular_user.login,
         "password": "wrong",
     }
-    response = await client.post("api-auth/v1/auth/login", json=login_data)
+    response = await client.post(
+        "api-auth/v1/auth/login",
+        json=login_data,
+        headers={"X-Request-Id": "test"},
+    )
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
 
@@ -88,7 +100,10 @@ async def test_get_user_role(
     """
     Тест для получения роли пользователя
     """
-    headers = {"Authorization": f"Bearer {login_admin_user['access_token']}"}
+    headers = {
+        "Authorization": f"Bearer {login_admin_user['access_token']}",
+        "X-Request-Id": "test",
+    }
     response = await client.get(
         f"/api-auth/v1/users/{create_admin_user.id}/role",
         headers=headers,
@@ -105,7 +120,10 @@ async def test_get_user_role_by_regular_user(
     """
     Тест для получения роли пользователя обычным пользователем
     """
-    headers = {"Authorization": f"Bearer {login_user['access_token']}"}
+    headers = {
+        "Authorization": f"Bearer {login_user['access_token']}",
+        "X-Request-Id": "test",
+    }
     response = await client.get(
         f"/api-auth/v1/users/{create_regular_user.id}/role",
         headers=headers,
@@ -120,7 +138,8 @@ async def test_get_user_role_unauthorized(
     Тест авторизации при получении роли пользователя
     """
     response = await client.get(
-        f"/api-auth/v1/users/{create_admin_user.id}/role"
+        f"/api-auth/v1/users/{create_admin_user.id}/role",
+        headers={"X-Request-Id": "test"},
     )
     assert response.status_code == status.HTTP_403_FORBIDDEN
 
@@ -132,7 +151,10 @@ async def test_set_user_role(
     Тест для обновления роли пользователя
     """
     new_role = {"role": "moderator"}
-    headers = {"Authorization": f"Bearer {login_admin_user['access_token']}"}
+    headers = {
+        "Authorization": f"Bearer {login_admin_user['access_token']}",
+        "X-Request-Id": "test",
+    }
     response = await client.patch(
         f"api-auth/v1/users/{create_admin_user.id}/role",
         json=new_role,
@@ -151,7 +173,10 @@ async def test_set_user_role_by_regular_user(
     Тест для обновления роли пользователя обычным пользователем
     """
     new_role = {"role": "moderator"}
-    headers = {"Authorization": f"Bearer {login_user['access_token']}"}
+    headers = {
+        "Authorization": f"Bearer {login_user['access_token']}",
+        "X-Request-Id": "test",
+    }
     response = await client.patch(
         f"api-auth/v1/users/{create_regular_user.id}/role",
         json=new_role,
@@ -170,6 +195,7 @@ async def test_set_user_role_unauthorized(
     response = await client.patch(
         f"api-auth/v1/users/{create_admin_user.id}/role",
         json=new_role,
+        headers={"X-Request-Id": "test"},
     )
     assert response.status_code == status.HTTP_403_FORBIDDEN
 
@@ -180,7 +206,10 @@ async def test_get_user_role_not_found(
     """
     Тест для проверки ошибки при получении роли несуществующего пользователя
     """
-    headers = {"Authorization": f"Bearer {login_admin_user['access_token']}"}
+    headers = {
+        "Authorization": f"Bearer {login_admin_user['access_token']}",
+        "X-Request-Id": "test",
+    }
     non_existent_user_id = UUID("123e4567-e89b-12d3-a456-426614174000")
     response = await client.get(
         f"api-auth/v1/users/{non_existent_user_id}/role",
@@ -199,7 +228,8 @@ async def test_get_user_role_not_found_unauthorized(
     """
     non_existent_user_id = UUID("123e4567-e89b-12d3-a456-426614174000")
     response = await client.get(
-        f"api-auth/v1/users/{non_existent_user_id}/role"
+        f"api-auth/v1/users/{non_existent_user_id}/role",
+        headers={"X-Request-Id": "test"},
     )
     assert response.status_code == status.HTTP_403_FORBIDDEN
 
@@ -210,7 +240,10 @@ async def test_set_user_role_not_found(
     """
     Тест для проверки ошибки при обновлении роли несуществующего пользователя
     """
-    headers = {"Authorization": f"Bearer {login_admin_user['access_token']}"}
+    headers = {
+        "Authorization": f"Bearer {login_admin_user['access_token']}",
+        "X-Request-Id": "test",
+    }
     non_existent_user_id = UUID("123e4567-e89b-12d3-a456-426614174000")
     new_role = {"role": "moderator"}
     response = await client.patch(
@@ -234,6 +267,7 @@ async def test_set_user_role_not_found_unauthorized(
     response = await client.patch(
         f"api-auth/v1/users/{non_existent_user_id}/role",
         json=new_role,
+        headers={"X-Request-Id": "test"},
     )
     assert response.status_code == status.HTTP_403_FORBIDDEN
 
@@ -244,7 +278,10 @@ async def test_set_user_role_invalid(
     """
     Тест для проверки ошибки при обновлении роли на несуществующую роль
     """
-    headers = {"Authorization": f"Bearer {login_admin_user['access_token']}"}
+    headers = {
+        "Authorization": f"Bearer {login_admin_user['access_token']}",
+        "X-Request-Id": "test",
+    }
     invalid_role = {"role": "invalid_role"}
     response = await client.patch(
         f"api-auth/v1/users/{create_admin_user.id}/role",
@@ -267,5 +304,6 @@ async def test_set_user_role_invalid_unauthorized(
     response = await client.patch(
         f"api-auth/v1/users/{create_admin_user.id}/role",
         json=invalid_role,
+        headers={"X-Request-Id": "test"},
     )
     assert response.status_code == status.HTTP_403_FORBIDDEN

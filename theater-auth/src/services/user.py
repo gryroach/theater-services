@@ -35,11 +35,17 @@ class UserService:
     async def register_user(
         self, db: AsyncSession, user_data: UserRegister
     ) -> UserInDB:
-        existing_user = await self.user_repo.get_by_field(
+        existing_login = await self.user_repo.get_by_field(
             db, "login", user_data.login
         )
-        if existing_user:
-            raise UserAlreadyExistsError("Login already exists")
+        existing_email = None
+        if user_data.email:
+            existing_email = await self.user_repo.get_by_field(
+                db, "email", user_data.email
+            )
+        if existing_login or existing_email:
+            raise UserAlreadyExistsError("Login or email already exists")
+
         user = await self.user_repo.create(
             db,
             obj_in=UserCreate(**user_data.model_dump()),
