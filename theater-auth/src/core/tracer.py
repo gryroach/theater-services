@@ -8,6 +8,8 @@ from core.config import settings
 
 
 def configure_tracer() -> None:
+    if settings.test_mode:
+        return None
     trace.set_tracer_provider(
         TracerProvider(resource=Resource.create({SERVICE_NAME: "Auth API"}))
     )

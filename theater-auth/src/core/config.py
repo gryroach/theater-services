@@ -1,4 +1,7 @@
+import os
+
 from logging import config as logging_config
+from typing import Any
 
 from dotenv import find_dotenv, load_dotenv
 from pydantic import Field
@@ -13,6 +16,7 @@ load_dotenv(DOTENV_PATH)
 
 class AppSettings(BaseSettings):
     project_name: str = Field(default="Movies auth API")
+    api_production: bool = Field(default=True)
 
     # Настройки Postgres
     postgres_user: str = Field(default="postgres")
@@ -46,12 +50,26 @@ class AppSettings(BaseSettings):
     jaeger_host: str = Field(default="jaeger")
     jaeger_port: int = Field(default=6831)
 
+    # Google OAuth
+    google_client_file_path: str = Field(
+        default="/app/keys/google_oauth_client_secret.json"
+    )
+    google_redirect_host: str = Field(default="localhost")
+    google_client_id: str = Field()
+
+    # Другие настройки
+    test_mode: bool = Field(default=False)
+
     model_config = SettingsConfigDict(
         env_file=DOTENV_PATH,
         env_file_encoding="utf-8",
         extra="ignore",
         env_prefix="auth_"
     )
+
+    def model_post_init(self, __context: Any) -> None:
+        if not self.api_production:
+            os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
 
     @property
     def database_dsn(self) -> str:

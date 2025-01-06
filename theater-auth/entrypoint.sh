@@ -35,7 +35,7 @@ apply_migrations
 
 create_admin_if_needed
 
-if [ "$API_PRODUCTION" = "true" ]; then
+if [ "$AUTH_API_PRODUCTION" = "true" ]; then
   # https://fastapi.tiangolo.com/deployment/docker/#replication-number-of-processes
   echo "Запуск приложения в продакшн-режиме..."
   eval uv run fastapi run src/main.py --host 0.0.0.0 --port 8000

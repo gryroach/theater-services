@@ -112,6 +112,10 @@ async def client(
         "core.config.settings.redis_db",
         settings.test_redis_db,
     )
+    monkeypatch.setattr(
+        "core.config.settings.test_mode",
+        True,
+    )
     async with LifespanManager(app) as manager:
         async with AsyncClient(
             transport=ASGITransport(app=manager.app),

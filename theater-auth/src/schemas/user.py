@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, field_validator
+from pydantic import BaseModel, ConfigDict, EmailStr, field_validator
 from services.roles import Roles
 from werkzeug.security import generate_password_hash
 
@@ -52,3 +52,9 @@ class UserCredentialsUpdate(BaseModel):
     @classmethod
     def replace_hyphen(cls, v: str) -> str:
         return generate_password_hash(v)
+
+
+class UserEmailRegister(BaseModel):
+    first_name: str
+    last_name: str
+    email: EmailStr
