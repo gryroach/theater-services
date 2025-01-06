@@ -13,7 +13,6 @@ class UserCredentials(BaseModel):
 class UserRegister(UserCredentials):
     first_name: str
     last_name: str
-    email: EmailStr | None = None
 
 
 class UserCreate(UserRegister):
@@ -33,7 +32,6 @@ class UserInDB(BaseModel):
     id: UUID
     first_name: str
     last_name: str
-    email: EmailStr | None = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -41,7 +39,6 @@ class UserInDB(BaseModel):
 class UserData(BaseModel):
     first_name: str
     last_name: str
-    email: EmailStr | None = None
 
     model_config = ConfigDict(from_attributes=True)
 

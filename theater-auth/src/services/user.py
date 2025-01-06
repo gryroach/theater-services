@@ -38,17 +38,11 @@ class UserService:
     async def register_user(
         self, db: AsyncSession, user_data: UserRegister
     ) -> UserInDB:
-        existing_login = await self.user_repo.get_by_field(
+        existing_user = await self.user_repo.get_by_field(
             db, "login", user_data.login
         )
-        existing_email = None
-        if user_data.email:
-            existing_email = await self.user_repo.get_by_field(
-                db, "email", user_data.email
-            )
-        if existing_login or existing_email:
-            raise UserAlreadyExistsError("Login or email already exists")
-
+        if existing_user:
+            raise UserAlreadyExistsError("Login already exists")
         user = await self.user_repo.create(
             db,
             obj_in=UserCreate(**user_data.model_dump()),
@@ -123,18 +117,17 @@ class UserService:
         Создание пользователя через его почту со случайным паролем.
         Если пользователь уже существует, он возвращается без пароля.
         """
-        user = await self.user_repo.get_by_field(db, 'email', user_data.email)
+        user = await self.user_repo.get_by_field(db, "login", user_data.email)
         if user:
             return user, None
 
         alphabet = string.ascii_letters + string.digits
-        user_password = ''.join(secrets.choice(alphabet) for _ in range(8))
-        user_login = user_data.email.split("@")[0]
+        user_password = "".join(secrets.choice(alphabet) for _ in range(8))
 
         user = await self.user_repo.create(
             db,
             obj_in=UserCreate(
-                login=user_login,
+                login=str(user_data.email),
                 password=user_password,
                 **user_data.model_dump(),
             ),
