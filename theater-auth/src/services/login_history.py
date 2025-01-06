@@ -1,10 +1,10 @@
+from datetime import date
 from typing import Annotated
 
 from fastapi import Depends
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from repositories.login_history import LoginHistoryRepository
 from schemas.login import LoginHistoryCreate, LoginHistoryInDB
+from sqlalchemy.ext.asyncio import AsyncSession
 
 
 class LoginHistoryService:
@@ -12,7 +12,7 @@ class LoginHistoryService:
         self.repo = repo
 
     async def log_login(self, db: AsyncSession, data: LoginHistoryCreate):
-        """Записать вход в историю."""
+        """Записать вход в историю с учётом партицирования."""
         return await self.repo.create(db, obj_in=data)
 
     async def get_user_history(

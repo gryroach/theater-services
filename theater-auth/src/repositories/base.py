@@ -2,14 +2,13 @@ from abc import ABC, abstractmethod
 from typing import Any, Generic, Optional, Type, TypeVar
 from uuid import UUID
 
+from db.db import Base
 from fastapi.encoders import jsonable_encoder
 from pydantic import BaseModel
 from sqlalchemy import delete, inspect, select
 from sqlalchemy import update as sqlalchemy_update
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
-
-from db.db import Base
 
 
 class Repository(ABC):
@@ -94,7 +93,7 @@ class RepositoryDB(
     async def create(
         self, db: AsyncSession, *, obj_in: CreateSchemaType
     ) -> ModelType:
-        obj_in_data = jsonable_encoder(obj_in)
+        obj_in_data = obj_in.model_dump()
         db_obj = self._model(**obj_in_data)
         db.add(db_obj)
         await db.commit()
