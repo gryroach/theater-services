@@ -1,16 +1,16 @@
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
-from fastapi.responses import ORJSONResponse
-from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
-from redis.asyncio import Redis
-
 from api.v1 import api_router as api_v1_router
 from core.config import settings
 from core.tracer import configure_tracer
 from db import redis
+from fastapi import FastAPI
+from fastapi.responses import ORJSONResponse
 from handlers import exception_handlers
+from middlewares.rate_limit import rate_limit_middleware
 from middlewares.tracing import request_id_span
+from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
+from redis.asyncio import Redis
 
 
 @asynccontextmanager
@@ -37,5 +37,6 @@ app = FastAPI(
 FastAPIInstrumentor.instrument_app(app)
 
 app.middleware("http")(request_id_span)
+app.middleware("http")(rate_limit_middleware)
 
 app.include_router(api_v1_router, prefix="/api-auth/v1")

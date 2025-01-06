@@ -59,6 +59,7 @@ class AppSettings(BaseSettings):
 
     # Другие настройки
     test_mode: bool = Field(default=False)
+    request_limit_per_minute: int = Field(default=20)
 
     model_config = SettingsConfigDict(
         env_file=DOTENV_PATH,
