@@ -9,7 +9,6 @@ class LoginHistoryCreate(BaseModel):
     user_id: UUID
     ip_address: str | None
     user_agent: str | None
-    partition_date: date = date.today().replace(day=1)
 
 
 class LoginHistoryInDB(LoginHistoryCreate):

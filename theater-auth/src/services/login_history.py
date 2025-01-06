@@ -13,7 +13,6 @@ class LoginHistoryService:
 
     async def log_login(self, db: AsyncSession, data: LoginHistoryCreate):
         """Записать вход в историю с учётом партицирования."""
-        data.partition_date = date.today().replace(day=1)
         return await self.repo.create(db, obj_in=data)
 
     async def get_user_history(

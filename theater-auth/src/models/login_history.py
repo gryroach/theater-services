@@ -11,6 +11,3 @@ class LoginHistory(Base):
     ip_address = Column(String(50))
     user_agent = Column(String(255))
     login_time = Column(DateTime, default=func.now())
-    partition_date = Column(
-        Date, default=func.date_trunc("month", func.now()), nullable=False
-    )
