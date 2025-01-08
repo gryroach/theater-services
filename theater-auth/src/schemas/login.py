@@ -1,4 +1,4 @@
-from datetime import date, datetime
+from datetime import datetime
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict
@@ -13,7 +13,6 @@ class LoginHistoryCreate(BaseModel):
 
 class LoginHistoryInDB(LoginHistoryCreate):
     login_time: datetime
-
     model_config = ConfigDict(from_attributes=True)
 
 
@@ -34,4 +33,4 @@ class LoginPasswordResponse(BaseModel):
     access_token: str
     refresh_token: str
     token_type: str = "bearer"
-    password: str| None = None
+    password: str | None = None
