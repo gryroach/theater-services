@@ -1,13 +1,11 @@
 import os
-
 from logging import config as logging_config
 from typing import Any
 
+from core.logger import LOGGING
 from dotenv import find_dotenv, load_dotenv
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
-
-from core.logger import LOGGING
 
 logging_config.dictConfig(LOGGING)
 DOTENV_PATH = find_dotenv(".env")
@@ -55,7 +53,16 @@ class AppSettings(BaseSettings):
         default="/app/keys/google_oauth_client_secret.json"
     )
     google_redirect_host: str = Field(default="localhost")
-    google_client_id: str = Field()
+    google_client_id: str = Field(default="test_client_id")
+
+    # Yandex OAuth
+    yandex_client_id: str = Field(default="e30f0dc42da04837927737821211139f")
+    yandex_client_secret: str = Field(
+        default="af143248c9ab450aa2b3a7d0a6ad7bfd"
+    )
+    yandex_redirect_host: str = Field(
+        default="https://oauth.yandex.ru/authorize?response_type=code&client_id=e30f0dc42da04837927737821211139f"
+    )
 
     # Другие настройки
     test_mode: bool = Field(default=False)
@@ -65,7 +72,7 @@ class AppSettings(BaseSettings):
         env_file=DOTENV_PATH,
         env_file_encoding="utf-8",
         extra="ignore",
-        env_prefix="auth_"
+        env_prefix="auth_",
     )
 
     def model_post_init(self, __context: Any) -> None:
