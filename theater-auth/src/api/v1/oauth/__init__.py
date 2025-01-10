@@ -1,17 +1,7 @@
 from fastapi import APIRouter
 
-from .google import router as google_router
-from .yandex import router as yandex_router
+from .oauth import router as oauth_router
 
 router = APIRouter()
 
-router.include_router(
-    google_router,
-    prefix="/google",
-    tags=["Аутентификация через google"],
-)
-router.include_router(
-    yandex_router,
-    prefix="/yandex",
-    tags=["Аутентификация через yandex"],
-)
+router.include_router(oauth_router, prefix="/api/v1/oauth", tags=["OAuth"])

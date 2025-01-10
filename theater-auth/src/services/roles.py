@@ -46,6 +46,7 @@ class Roles:
     @classmethod
     def roles(cls):
         return [
-            value.name for value in vars(cls).values()
+            value.name
+            for value in vars(cls).values()
             if isinstance(value, Role)
         ]

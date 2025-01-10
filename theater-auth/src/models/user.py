@@ -1,10 +1,9 @@
+from db.db import Base
+from services.roles import Roles
 from sqlalchemy import Column, DateTime, String
 from sqlalchemy.orm import validates
 from sqlalchemy.sql import func
 from werkzeug.security import check_password_hash, generate_password_hash
-
-from db.db import Base
-from services.roles import Roles
 
 
 class User(Base):

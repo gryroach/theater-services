@@ -1,15 +1,13 @@
 from datetime import timedelta
 from typing import Annotated
 
-from fastapi import Depends
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from core.config import settings
 from core.enums import PayloadKeys, TokenTypes
 from exceptions.auth_exceptions import (
     InvalidCredentialsError,
     InvalidSessionError,
 )
+from fastapi import Depends
 from models import User
 from repositories.user import UserRepository
 from schemas.login import LoginHistoryCreate
@@ -20,6 +18,7 @@ from services.login_history import (
     get_login_history_service,
 )
 from services.session_service import SessionService, get_session_service
+from sqlalchemy.ext.asyncio import AsyncSession
 
 
 class AuthService:
@@ -52,7 +51,7 @@ class AuthService:
         password: str,
         ip_address: str,
         user_agent: str,
-        user: User | None = None
+        user: User | None = None,
     ):
         if not user:
             user = await self.authenticate_user(db, login, password)
