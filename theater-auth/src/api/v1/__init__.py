@@ -31,4 +31,5 @@ api_router.include_router(
 api_router.include_router(
     oauth_router,
     prefix="/oauth",
+    tags=["OAuth"],
 )

@@ -1,12 +1,14 @@
-from db.db import get_session
 from fastapi import APIRouter, Depends, HTTPException, Request
+from sqlalchemy.ext.asyncio import AsyncSession
+from starlette.responses import RedirectResponse
+
+from db.db import get_session
+from exceptions.auth_exceptions import InvalidProviderError
 from schemas.login import LoginPasswordResponse
 from schemas.user import UserEmailRegister
 from services.auth import AuthService, get_auth_service
 from services.oauth import get_oauth_provider
 from services.user import UserService, get_user_service
-from sqlalchemy.ext.asyncio import AsyncSession
-from starlette.responses import RedirectResponse
 
 router = APIRouter()
 
@@ -23,7 +25,10 @@ async def login(provider: str):
         raise HTTPException(status_code=400, detail=str(e))
 
 
-@router.get("/{provider}/callback")
+@router.get(
+    "/{provider}/callback",
+    response_model=LoginPasswordResponse,
+)
 async def callback(
     provider: str,
     request: Request,
@@ -36,7 +41,7 @@ async def callback(
     """
     try:
         oauth_provider = get_oauth_provider(provider)
-        user_info = await oauth_provider.get_user_info(request.url)
+        user_info = await oauth_provider.get_user_info(str(request.url))
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
@@ -44,23 +49,31 @@ async def callback(
             status_code=403, detail=f"Authorization failed: {e}"
         )
 
-    user, password = await user_service.register_user_by_email(
-        db,
-        UserEmailRegister(
-            first_name=user_info.get("first_name", ""),
-            last_name=user_info.get("last_name", ""),
-            email=user_info["email"],
-        ),
-    )
+    try:
+        user, password = await user_service.register_user_by_oauth(
+            db,
+            UserEmailRegister(
+                first_name=user_info.get("first_name", ""),
+                last_name=user_info.get("last_name", ""),
+                email=user_info["email"],
+            ),
+            provider
+        )
+    except InvalidProviderError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
     ip_address = request.client.host
     user_agent = request.headers.get("User-Agent", "Unknown")
     tokens = await auth_service.login(
         db, user.login, user.password, ip_address, user_agent, user
     )
-    return LoginPasswordResponse(password=password, **tokens.model_dump())
+    return LoginPasswordResponse(login=user.login, password=password, **tokens.model_dump())
 
 
-@router.post("/{provider}/exchange-tokens")
+@router.post(
+    "/{provider}/exchange-tokens",
+    response_model=LoginPasswordResponse,
+)
 async def exchange_tokens(
     provider: str,
     code: str,
@@ -76,14 +89,18 @@ async def exchange_tokens(
         tokens = await oauth_provider.exchange_code_for_tokens(code)
 
         user_info = await oauth_provider.get_user_info(tokens["access_token"])
-        user, password = await user_service.register_user_by_email(
-            db,
-            UserEmailRegister(
-                first_name=user_info.get("first_name", ""),
-                last_name=user_info.get("last_name", ""),
-                email=user_info.get("email", user_info.get("login")),
-            ),
-        )
+        try:
+            user, password = await user_service.register_user_by_oauth(
+                db,
+                UserEmailRegister(
+                    first_name=user_info.get("first_name", ""),
+                    last_name=user_info.get("last_name", ""),
+                    email=user_info.get("email", user_info.get("login")),
+                ),
+                provider
+            )
+        except InvalidProviderError as e:
+            raise HTTPException(status_code=400, detail=str(e))
 
         auth_tokens = await auth_service.login(
             db,
@@ -93,10 +110,12 @@ async def exchange_tokens(
             user_agent="OAuthClient",
             user=user,
         )
-        return {
-            "auth_tokens": auth_tokens.model_dump(),
-            "oauth_tokens": tokens,
-        }
+        return LoginPasswordResponse(
+            login=user.login,
+            password=password,
+            oauth_tokens=tokens,
+            **auth_tokens.model_dump(),
+        )
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:

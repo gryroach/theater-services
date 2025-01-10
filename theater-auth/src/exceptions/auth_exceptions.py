@@ -41,3 +41,9 @@ class InvalidAlgorithmError(AuthError):
     """Ошибка алгоритма шифрования."""
 
     pass
+
+
+class InvalidProviderError(AuthError):
+    """Ошибка при несуществующем провайдере."""
+
+    pass
