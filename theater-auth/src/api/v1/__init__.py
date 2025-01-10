@@ -1,8 +1,8 @@
 from fastapi import APIRouter
 
 from .auth import router as auth_router
-from .oauth import router as oauth_router
 from .inspection import router as inspect_router
+from .oauth import router as oauth_router
 from .profile import router as profile_router
 from .user import router as user_router
 
@@ -28,7 +28,4 @@ api_router.include_router(
     prefix="/auth",
     tags=["API аутентификации"],
 )
-api_router.include_router(
-    oauth_router,
-    prefix="/oauth",
-)
+api_router.include_router(oauth_router, prefix="/oauth", tags=["OAuth"])

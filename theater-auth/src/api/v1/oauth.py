@@ -1,6 +1,7 @@
 from db.db import get_session
 from fastapi import APIRouter, Depends, HTTPException, Request
 from schemas.login import LoginPasswordResponse
+from schemas.oauth import OAuthCodeRequest
 from schemas.user import UserEmailRegister
 from services.auth import AuthService, get_auth_service
 from services.oauth import get_oauth_provider
@@ -37,9 +38,11 @@ async def callback(
     try:
         oauth_provider = get_oauth_provider(provider)
         user_info = await oauth_provider.get_user_info(request.url)
+        print(user_info)  # TODO
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
+
         raise HTTPException(
             status_code=403, detail=f"Authorization failed: {e}"
         )
@@ -63,7 +66,8 @@ async def callback(
 @router.post("/{provider}/exchange-tokens")
 async def exchange_tokens(
     provider: str,
-    code: str,
+    body: OAuthCodeRequest,
+    request: Request,
     db: AsyncSession = Depends(get_session),
     user_service: UserService = Depends(get_user_service),
     auth_service: AuthService = Depends(get_auth_service),
@@ -73,7 +77,7 @@ async def exchange_tokens(
     """
     try:
         oauth_provider = get_oauth_provider(provider)
-        tokens = await oauth_provider.exchange_code_for_tokens(code)
+        tokens = await oauth_provider.exchange_code_for_tokens(body.code)
 
         user_info = await oauth_provider.get_user_info(tokens["access_token"])
         user, password = await user_service.register_user_by_email(
@@ -84,13 +88,12 @@ async def exchange_tokens(
                 email=user_info.get("email", user_info.get("login")),
             ),
         )
-
         auth_tokens = await auth_service.login(
             db,
             user.login,
             password,
-            ip_address="N/A",
-            user_agent="OAuthClient",
+            ip_address=request.client.host,
+            user_agent=request.headers.get("User-Agent", ""),
             user=user,
         )
         return {

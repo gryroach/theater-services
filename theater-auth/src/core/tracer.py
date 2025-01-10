@@ -18,6 +18,7 @@ def configure_tracer() -> None:
             JaegerExporter(
                 agent_host_name=settings.jaeger_host,
                 agent_port=settings.jaeger_port,
-            )
+                udp_split_oversized_batches=True,
+            ),
         )
     )
