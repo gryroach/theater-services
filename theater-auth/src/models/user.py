@@ -46,7 +46,7 @@ class User(Base):
 
 
 class UserSocialNetwork(Base):
-    user_id = Column(UUID, ForeignKey('user.id'), nullable=False)
+    user_id = Column(UUID, ForeignKey('user.id'), nullable=False, unique=True)
     google_id = Column(String(255), unique=True)
     yandex_id = Column(String(255), unique=True)
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())

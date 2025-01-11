@@ -17,20 +17,36 @@ class OAuthProvider(ABC):
     """
 
     @abstractmethod
-    def get_authorization_url(self) -> str:
-        pass
+    def get_authorization_url(self, state: str = "") -> str:
+        """
+        Получение url для редиректа в сервис провайдера.
+        """
+        raise NotImplementedError
 
     @abstractmethod
-    async def get_user_info(self, callback_info: str) -> Dict[str, str]:
-        pass
+    async def get_user_info(self, url: str, code: str) -> Dict[str, str]:
+        """
+        Получение информации о пользователе.
+        """
+        raise NotImplementedError
 
     @abstractmethod
-    async def exchange_code_for_tokens(self, code: str) -> Dict[str, str]:
-        pass
+    async def exchange_code_for_tokens(self, code: str | None = None, url: str | None = None) -> dict[str, str]:
+        """
+        Обмен кода авторизации на токены. Возможна реализация с парсингом url, либо напрямую через полученный код.
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    async def revoke_tokens(self, access_token: str) -> None:
+        """
+        Отзыв токенов.
+        """
+        raise NotImplementedError
 
 
 class GoogleOAuthProvider(OAuthProvider):
-    def __init__(self):
+    def __init__(self) -> None:
         self.flow = Flow.from_client_secrets_file(
             settings.google_client_file_path,
             scopes=[
@@ -43,17 +59,21 @@ class GoogleOAuthProvider(OAuthProvider):
             f"https://{settings.google_redirect_host}/api-auth/v1/oauth/google/callback"
         )
 
-    def get_authorization_url(self) -> str:
+    def get_authorization_url(self, state: str = "") -> str:
         authorization_url, _ = self.flow.authorization_url(
             access_type="offline",
             include_granted_scopes="true",
             prompt="consent",
+            state=state,
         )
         return authorization_url
 
-    async def get_user_info(self, callback_info: str) -> Dict[str, str]:
+    async def get_user_info(self, url: str, code: str) -> Dict[str, str]:
+        """
+        Получение информации о пользователе.
+        """
         try:
-            self.flow.fetch_token(authorization_response=callback_info)
+            await self.exchange_code_for_tokens(url=url)
             user_info = id_token.verify_oauth2_token(
                 self.flow.credentials.id_token,
                 requests.Request(),
@@ -65,7 +85,10 @@ class GoogleOAuthProvider(OAuthProvider):
         except Exception as e:
             raise AuthError(f"Google OAuth error: {e}")
 
-    async def revoke_tokens(self, access_token: str):
+    async def revoke_tokens(self, access_token: str) -> None:
+        """
+        Отзыв токенов через Google API.
+        """
         try:
             async with httpx.AsyncClient() as client:
                 response = await client.post(
@@ -79,17 +102,24 @@ class GoogleOAuthProvider(OAuthProvider):
         except httpx.HTTPError as e:
             raise AuthError(f"Google token revoke failed: {e}")
 
-    async def exchange_code_for_tokens(self, code: str) -> Dict[str, str]:
-        raise NotImplementedError(
-            "Google uses the callback to handle token exchange."
-        )
+    async def exchange_code_for_tokens(self, code: str | None = None, url: str | None = None) -> dict[str, str]:
+        """
+        Обмен кода авторизации на токены.
+        """
+        return self.flow.fetch_token(authorization_response=url)
 
 
 class YandexOAuthProvider(OAuthProvider):
-    def get_authorization_url(self) -> str:
-        return f"https://oauth.yandex.ru/authorize?response_type=code&client_id={settings.yandex_client_id}"
+    def get_authorization_url(self, state: str = "") -> str:
+        return (
+            f"https://oauth.yandex.ru/authorize?"
+            f"response_type=code&"
+            f"client_id={settings.yandex_client_id}&"
+            f"state={state}&"
+            f"redirect_uri=https://{settings.yandex_redirect_host}/api-auth/v1/oauth/yandex/callback"
+        )
 
-    async def exchange_code_for_tokens(self, code: str) -> Dict[str, str]:
+    async def exchange_code_for_tokens(self, code: str | None = None, url: str | None = None) -> dict[str, str]:
         """
         Обмен кода авторизации на токены.
         """
@@ -107,14 +137,15 @@ class YandexOAuthProvider(OAuthProvider):
             response.raise_for_status()
             return response.json()
 
-    async def get_user_info(self, callback_info: str) -> Dict[str, str]:
+    async def get_user_info(self, url: str, code: str) -> Dict[str, str]:
         """
         Получение информации о пользователе.
         """
+        tokens = await self.exchange_code_for_tokens(code=code)
         async with httpx.AsyncClient() as client:
             response = await client.get(
                 "https://login.yandex.ru/info",
-                headers={"Authorization": f"OAuth {callback_info}"},
+                headers={"Authorization": f"OAuth {tokens['access_token']}"},
                 params={"format": "json"},
             )
             response.raise_for_status()

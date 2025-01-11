@@ -13,3 +13,8 @@ class PayloadKeys(str, Enum):
 class TokenTypes(str, Enum):
     REFRESH = "refresh"
     ACCESS = "access"
+
+
+class OauthRequestTypes(str, Enum):
+    login = "login"
+    link = "link"

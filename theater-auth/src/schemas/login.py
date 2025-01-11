@@ -3,6 +3,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict
 
+from core.enums import OauthRequestTypes
+
 
 class LoginHistoryCreate(BaseModel):
     id: UUID | None = None
@@ -35,4 +37,16 @@ class LoginPasswordResponse(BaseModel):
     token_type: str = "bearer"
     login: str | None = None
     password: str | None = None
+
+
+class OauthTokenResponse(BaseModel):
     oauth_tokens: dict | None = None
+
+
+class SocialNetworkAttachedResponse(BaseModel):
+    detail: str
+
+
+class OauthState(BaseModel):
+    request_type: OauthRequestTypes
+    user_id: str | None = None

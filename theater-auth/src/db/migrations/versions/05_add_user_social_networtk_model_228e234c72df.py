@@ -29,6 +29,7 @@ def upgrade() -> None:
     sa.ForeignKeyConstraint(['user_id'], ['user.id'], ),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('id'),
+    sa.UniqueConstraint('user_id'),
     sa.UniqueConstraint("google_id"),
     sa.UniqueConstraint("yandex_id"),
     )
