@@ -1,10 +1,13 @@
 from typing import Annotated
 
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from sqlalchemy.ext.asyncio import AsyncSession
+from starlette.responses import RedirectResponse
+
 from core.enums import OauthRequestTypes
 from db.db import get_session
 from dependencies.auth import JWTBearer
 from exceptions.auth_exceptions import InvalidProviderError
-from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from schemas.jwt import JwtTokenPayload
 from schemas.login import (
     LoginPasswordResponse,
@@ -12,13 +15,10 @@ from schemas.login import (
     OauthTokenResponse,
     SocialNetworkAttachedResponse,
 )
-from schemas.oauth import OAuthCodeRequest
 from schemas.user import UserOauthRegister
 from services.auth import AuthService, get_auth_service
 from services.oauth import get_oauth_provider
 from services.user import UserService, get_user_service
-from sqlalchemy.ext.asyncio import AsyncSession
-from starlette.responses import RedirectResponse
 from utils import decode_state, encode_state
 
 router = APIRouter()

@@ -1,9 +1,10 @@
 from unittest.mock import AsyncMock
 
 import pytest
-from core.config import settings
 from fastapi.testclient import TestClient
 from httpx import Request, Response
+
+from core.config import settings
 from main import app
 from models import User
 from schemas.refresh import TokenResponse
