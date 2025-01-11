@@ -1,6 +1,5 @@
 import uuid
 
-from core.config import settings
 from sqlalchemy import Column
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.ext.asyncio import (
@@ -10,6 +9,8 @@ from sqlalchemy.ext.asyncio import (
 )
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.orm import as_declarative
+
+from core.config import settings
 
 
 @as_declarative()

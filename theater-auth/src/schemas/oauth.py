@@ -1,7 +1,7 @@
 from pydantic import BaseModel
 
 
-class YandexAuthRequest(BaseModel):
+class OAuthCodeRequest(BaseModel):
     code: str
 
 

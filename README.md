@@ -111,5 +111,5 @@ make run-auth
 ```
 - Пройдите аутентификацию через запрос по адресу `https://127.0.0.1/api-auth/v1/auth/login`
 - Скопируйте access-токен
-- Измените скрипт `theater-auth/src/tests/link_social_link_test.py` и запустите его.
+- Измените скрипт `theater-auth/src/tests/link_social_network_test.py` и запустите его.
 
