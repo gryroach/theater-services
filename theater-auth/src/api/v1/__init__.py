@@ -28,4 +28,8 @@ api_router.include_router(
     prefix="/auth",
     tags=["API аутентификации"],
 )
-api_router.include_router(oauth_router, prefix="/oauth", tags=["OAuth"])
+api_router.include_router(
+    oauth_router,
+    prefix="/oauth",
+    tags=["OAuth"],
+)

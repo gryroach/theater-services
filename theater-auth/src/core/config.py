@@ -54,15 +54,14 @@ class AppSettings(BaseSettings):
     )
     google_redirect_host: str = Field(default="localhost")
     google_client_id: str = Field(default="test_client_id")
+    google_secret_id: str = Field(default="test_secret_id")
 
     # Yandex OAuth
     yandex_client_id: str = Field(default="e30f0dc42da04837927737821211139f")
     yandex_client_secret: str = Field(
         default="af143248c9ab450aa2b3a7d0a6ad7bfd"
     )
-    yandex_redirect_host: str = Field(
-        default="https://oauth.yandex.ru/authorize?response_type=code&client_id=e30f0dc42da04837927737821211139f"
-    )
+    yandex_redirect_host: str = Field(default="localhost")
 
     # Другие настройки
     test_mode: bool = Field(default=False)

@@ -54,7 +54,7 @@ class UserCredentialsUpdate(BaseModel):
         return generate_password_hash(v)
 
 
-class UserEmailRegister(BaseModel):
+class UserOauthRegister(BaseModel):
     first_name: str
     last_name: str
-    email: str
+    provider_id: str

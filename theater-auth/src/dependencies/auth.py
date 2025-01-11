@@ -31,12 +31,15 @@ class JWTBearer(HTTPBearer):
         request: Request,
         jwt_service: JWTService = Depends(get_jwt_service),
         session_service: SessionService = Depends(get_session_service),
-    ) -> JwtTokenPayload:
+    ) -> JwtTokenPayload | None:
         self.jwt_service = jwt_service
         self.session_service = session_service
         credentials: HTTPAuthorizationCredentials = await super().__call__(
             request
         )
+        if credentials is None:
+            return None
+
         await self.verify_jwt(credentials.credentials)
         return self.token_payload
 

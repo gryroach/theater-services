@@ -7,6 +7,7 @@ from db.db import async_session
 from exceptions import UserAlreadyExistsError
 from repositories.cache import RedisCacheRepository
 from repositories.user import UserRepository
+from repositories.user_social_network import UserSocialNetworkRepository
 from schemas.user import UserCreate
 from services.roles import Roles
 from services.session_service import SessionService
@@ -32,11 +33,12 @@ async def create_admin(
         role=Roles.admin.name,
     )
     user_repo = UserRepository()
+    user_network_repo = UserSocialNetworkRepository()
     redis = Redis.from_url(settings.redis_url)
     try:
         token_service = SessionService(RedisCacheRepository(redis))
         user_service = UserService(
-            user_repo=user_repo, session_service=token_service
+            user_repo=user_repo, user_network_repo=user_network_repo, session_service=token_service
         )
         async with async_session() as session:
             await user_service.register_user(db=session, user_data=user_data)
