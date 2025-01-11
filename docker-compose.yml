@@ -164,7 +164,7 @@ services:
     container_name: movies_auth_tests
     environment:
       - PYTHONPATH=/app
-    entrypoint: "uv run pytest"
+    entrypoint: "uv run pytest -vv"
     env_file:
       - ./.env
 

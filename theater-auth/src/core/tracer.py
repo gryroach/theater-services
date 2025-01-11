@@ -1,10 +1,9 @@
+from core.config import settings
 from opentelemetry import trace
 from opentelemetry.exporter.jaeger.thrift import JaegerExporter
 from opentelemetry.sdk.resources import SERVICE_NAME, Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
-
-from core.config import settings
 
 
 def configure_tracer() -> None:
@@ -19,6 +18,7 @@ def configure_tracer() -> None:
             JaegerExporter(
                 agent_host_name=settings.jaeger_host,
                 agent_port=settings.jaeger_port,
-            )
+                udp_split_oversized_batches=True,
+            ),
         )
     )

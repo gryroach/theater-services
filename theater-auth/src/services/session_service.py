@@ -1,8 +1,7 @@
-from fastapi import Depends
-from redis.asyncio import Redis
-
 from core.config import settings
 from db.redis import get_redis
+from fastapi import Depends
+from redis.asyncio import Redis
 from repositories.cache import CacheRepository, RedisCacheRepository
 
 

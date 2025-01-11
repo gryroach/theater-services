@@ -2,19 +2,18 @@ from typing import Annotated, Callable
 from uuid import UUID
 
 import jwt
-from fastapi import Depends, HTTPException, Request
-from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from sqlalchemy.ext.asyncio import AsyncSession
-from starlette import status
-
 from db.db import get_session
 from exceptions.auth_exceptions import InvalidTokenError, TokenExpiredError
 from exceptions.user_exceptions import UserDoesNotExistsError, UserError
+from fastapi import Depends, HTTPException, Request
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from schemas.jwt import JwtTokenPayload
 from schemas.user import UserInDB
 from services.jwt_service import JWTService, get_jwt_service
 from services.session_service import SessionService, get_session_service
 from services.user import UserService, get_user_service
+from sqlalchemy.ext.asyncio import AsyncSession
+from starlette import status
 
 
 class JWTBearer(HTTPBearer):
@@ -77,7 +76,7 @@ async def get_current_user(
 
 
 def require_roles(
-        required_roles: list[str]
+    required_roles: list[str],
 ) -> Callable[[JwtTokenPayload], JwtTokenPayload]:
     def dependency(
         token_payload: Annotated[JwtTokenPayload, Depends(JWTBearer())]

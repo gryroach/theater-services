@@ -111,7 +111,7 @@ class UserService:
         return UserData.model_validate(updated_user)
 
     async def register_user_by_email(
-            self, db: AsyncSession, user_data: UserEmailRegister
+        self, db: AsyncSession, user_data: UserEmailRegister
     ) -> tuple[User, str | None]:
         """
         Создание пользователя через его почту со случайным паролем.
